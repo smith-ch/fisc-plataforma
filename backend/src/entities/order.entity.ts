@@ -53,7 +53,7 @@ export class Order {
   @Column({ type: 'varchar', length: 10, nullable: true })
   preferredDate: string | null;
 
-  @Column({ type: 'varchar', length: 20, nullable: true })
+  @Column({ type: 'varchar', length: 40, nullable: true })
   preferredTime: string | null;
 
   /** presencial | virtual */

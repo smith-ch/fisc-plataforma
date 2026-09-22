@@ -27,7 +27,7 @@ export class CreateOrderDto {
   @IsIn(['normal', 'prioritaria', 'urgente']) urgency: string;
   @IsOptional() @IsString() @MaxLength(40) areaSize?: string;
   @IsOptional() @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'Fecha inválida' }) preferredDate?: string;
-  @IsOptional() @IsString() @MaxLength(20) preferredTime?: string;
+  @IsOptional() @IsString() @MaxLength(40) preferredTime?: string;
   @IsIn(['presencial', 'virtual']) visitType: string;
   @IsOptional() @IsString() @MaxLength(3000) notes?: string;
 
