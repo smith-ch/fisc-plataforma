@@ -2,12 +2,13 @@
 
 import {
   BarChart3, ClipboardList, CreditCard, FileClock, HelpCircle, Images, Layers, LayoutDashboard, LogOut, Mail, Menu, MessageSquareQuote,
-  Palette, Star, Users, Wrench, X, ExternalLink,
+  Palette, Star, Users, Wrench, X, ExternalLink, Moon, Sun,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/providers';
+import { useTheme } from '@/components/theme';
 import { Spinner } from '@/components/ui/bits';
 
 const NAV = [
@@ -37,6 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { theme, toggle } = useTheme();
 
   useEffect(() => {
     if (loading) return;
@@ -66,7 +68,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {items.map((i) => {
                 const active = i.href === '/admin' ? pathname === '/admin' : pathname.startsWith(i.href);
                 return (
-                  <Link key={i.href} href={i.href} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${active ? 'bg-white text-ink-900' : 'text-white/65 hover:bg-white/10 hover:text-white'}`}>
+                  <Link key={i.href} href={i.href} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${active ? 'bg-white text-ink-950' : 'text-white/65 hover:bg-white/10 hover:text-white'}`}>
                     <i.icon className="h-4 w-4" /> {i.label}
                   </Link>
                 );
@@ -77,6 +79,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
       <div className="border-t border-white/10 p-3">
         <Link href="/" target="_blank" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/65 hover:bg-white/10 hover:text-white"><ExternalLink className="h-4 w-4" /> Ver sitio web</Link>
+        <button onClick={toggle} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/65 hover:bg-white/10 hover:text-white">
+          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />} {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+        </button>
         <button onClick={() => { logout(); router.push('/'); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/65 hover:bg-white/10 hover:text-white"><LogOut className="h-4 w-4" /> Cerrar sesión</button>
         <p className="mt-2 truncate px-3 text-xs text-white/40">{user.name} · {user.email}</p>
       </div>
@@ -94,7 +99,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       )}
       <div className="lg:pl-64">
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-ink-900/10 bg-sand-100/80 px-4 py-3 backdrop-blur lg:hidden">
-          <button onClick={() => setOpen(true)} aria-label="Menú" className="grid h-10 w-10 place-items-center rounded-xl bg-white">{open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
+          <button onClick={() => setOpen(true)} aria-label="Menú" className="grid h-10 w-10 place-items-center rounded-xl bg-paper">{open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
           <span className="font-display font-bold tracking-[0.14em]">F.I.S.C.</span>
           <BarChart3 className="ml-auto h-5 w-5 text-ink-900/30" />
         </header>

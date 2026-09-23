@@ -82,7 +82,7 @@ export function Stars({ value, onChange, size = 'h-6 w-6' }: { value: number; on
 }
 
 export function Spinner({ className = '' }: { className?: string }) {
-  return <div className={`flex justify-center py-16 ${className}`}><Loader2 className="h-7 w-7 animate-spin text-brand" /></div>;
+  return <div className={`flex justify-center py-16 ${className}`}><Loader2 className="h-7 w-7 animate-spin text-brand-ink" /></div>;
 }
 
 export function Empty({ children }: { children: React.ReactNode }) {

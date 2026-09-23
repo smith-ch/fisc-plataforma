@@ -31,7 +31,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
       </PageHero>
       <div className="container-x grid gap-12 py-16 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <Link href="/servicios" className="mb-6 inline-flex items-center gap-1 text-sm text-ink-900/60 hover:text-brand"><ArrowLeft className="h-4 w-4" /> Volver al catálogo</Link>
+          <Link href="/servicios" className="mb-6 inline-flex items-center gap-1 text-sm text-ink-900/60 hover:text-brand-ink"><ArrowLeft className="h-4 w-4" /> Volver al catálogo</Link>
           {service.imageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={service.imageUrl} alt={service.name} className="mb-8 aspect-video w-full rounded-3xl object-cover" />
@@ -42,7 +42,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
               <h2 className="mt-10 mb-4 text-xl font-bold">¿Qué incluye?</h2>
               <ul className="grid gap-3 sm:grid-cols-2">
                 {service.features.map((f) => (
-                  <li key={f} className="card flex items-start gap-3 p-4 text-sm"><CheckCircle2 className="h-5 w-5 shrink-0 text-brand" /> {f}</li>
+                  <li key={f} className="card flex items-start gap-3 p-4 text-sm"><CheckCircle2 className="h-5 w-5 shrink-0 text-brand-ink" /> {f}</li>
                 ))}
               </ul>
             </Reveal>

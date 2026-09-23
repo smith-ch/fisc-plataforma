@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Modo oscuro por clase (`html.dark`), controlado por el selector de tema */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-display-face), ui-serif, Georgia, serif;
@@ -13,6 +16,10 @@
   --color-sand-200: #d7d5ce;
   --color-brand: var(--brand, #3E4A52);
   --color-brand-soft: color-mix(in oklab, var(--brand, #3E4A52) 14%, white);
+  /* Marca usada como texto / icono (se aclara en modo oscuro para mantener contraste) */
+  --color-brand-ink: var(--brand, #3E4A52);
+  /* Superficie de tarjetas, inputs y paneles */
+  --color-paper: #ffffff;
   --color-accent: var(--accent, #9FB4C0);
 
   --animate-marquee: marquee 40s linear infinite;
@@ -32,6 +39,30 @@
   --brand: #3E4A52;
   --accent: #9FB4C0;
   color-scheme: light;
+}
+
+/*
+ * Modo oscuro: se invierte la escala "sand" (fondos) e "ink-900" (texto), así
+ * que todas las utilidades existentes (bg-sand-50, text-ink-900/60,
+ * border-ink-900/10…) cambian solas. `ink-950` se mantiene oscuro en ambos
+ * modos: es el color de las secciones que siempre son oscuras.
+ */
+.dark {
+  color-scheme: dark;
+  --color-sand-50: #0c0d0e;
+  --color-sand-100: #111315;
+  --color-sand-200: #1b1e21;
+  --color-ink-900: #ecebe6;
+  --color-ink-800: #d7d5ce;
+  --color-ink-700: #b9b7b0;
+  --color-paper: #16181b;
+  --color-brand-soft: color-mix(in oklab, var(--brand, #3E4A52) 38%, #16181b);
+  --color-brand-ink: color-mix(in oklab, var(--brand, #3E4A52) 45%, white);
+}
+
+/* Transición suave al cambiar de tema (sólo mientras dura el cambio) */
+html.theme-transition, html.theme-transition *, html.theme-transition *::before, html.theme-transition *::after {
+  transition: background-color .45s ease, border-color .45s ease, color .45s ease, fill .45s ease !important;
 }
 
 html { -webkit-font-smoothing: antialiased; }
@@ -57,12 +88,12 @@ body {
   .btn-primary { @apply bg-brand text-white shadow-lg shadow-brand/25 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-brand/30; }
   .btn-accent { @apply bg-accent text-ink-950 hover:-translate-y-0.5 hover:brightness-105; }
   .btn-ghost { @apply border border-current/20 hover:bg-current/5; }
-  .btn-dark { @apply bg-ink-900 text-white hover:bg-ink-800; }
+  .btn-dark { @apply bg-ink-900 text-sand-50 hover:opacity-90; }
   .btn-sm { @apply px-3.5 py-1.5 text-xs; }
 
-  .input { @apply w-full rounded-xl border border-ink-900/15 bg-white px-3.5 py-2.5 text-sm outline-none transition placeholder:text-ink-900/40 focus:border-brand focus:ring-4 focus:ring-brand/15; }
+  .input { @apply w-full rounded-xl border border-ink-900/15 bg-paper px-3.5 py-2.5 text-sm outline-none transition placeholder:text-ink-900/40 focus:border-brand focus:ring-4 focus:ring-brand/15; }
   .label { @apply mb-1.5 block text-xs font-semibold tracking-wide text-ink-900/70 uppercase; }
-  .card { @apply rounded-2xl border border-ink-900/10 bg-white shadow-sm; }
+  .card { @apply rounded-2xl border border-ink-900/10 bg-paper shadow-sm; }
   .eyebrow { @apply text-xs font-semibold tracking-[0.25em] uppercase; }
   .badge { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold; }
 }
