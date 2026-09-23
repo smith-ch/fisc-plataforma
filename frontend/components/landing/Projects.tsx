@@ -12,8 +12,8 @@ export function Projects({ projects }: { projects: Project[] }) {
     <section id="trabajos" className="bg-sand-50 py-28">
       <div className="container-x">
         <Reveal>
-          <p className="eyebrow text-brand">Trabajos realizados</p>
-          <h2 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">Antes <span className="font-display font-medium text-brand">&amp;</span> después</h2>
+          <p className="eyebrow text-brand-ink">Trabajos realizados</p>
+          <h2 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">Antes <span className="font-display font-medium text-brand-ink">&amp;</span> después</h2>
         </Reveal>
         <div className="mt-12 grid gap-8 md:grid-cols-2">
           {projects.map((p, i) => (
@@ -28,7 +28,7 @@ export function Projects({ projects }: { projects: Project[] }) {
                     <h3 className="text-xl font-bold">{p.title}</h3>
                     {p.description && <p className="mt-1 text-sm text-ink-900/60">{p.description}</p>}
                   </div>
-                  {p.category && <span className="badge shrink-0 bg-brand-soft text-brand">{p.category}</span>}
+                  {p.category && <span className="badge shrink-0 bg-brand-soft text-brand-ink">{p.category}</span>}
                 </div>
               </article>
             </Reveal>
@@ -54,12 +54,12 @@ function Compare({ before, after }: { before: string; after: string }) {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={before} alt="Antes" className="absolute inset-0 h-full w-full object-cover" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }} />
       <div className="absolute inset-y-0 w-0.5 bg-white shadow" style={{ left: `${pos}%` }}>
-        <span className="absolute top-1/2 left-1/2 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-ink-900 shadow-lg">
+        <span className="absolute top-1/2 left-1/2 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-ink-950 shadow-lg">
           <MoveHorizontal className="h-4 w-4" />
         </span>
       </div>
       <span className="badge absolute top-4 left-4 bg-ink-950/70 text-white">Antes</span>
-      <span className="badge absolute top-4 right-4 bg-white/90 text-ink-900">Después</span>
+      <span className="badge absolute top-4 right-4 bg-white/90 text-ink-950">Después</span>
     </div>
   );
 }

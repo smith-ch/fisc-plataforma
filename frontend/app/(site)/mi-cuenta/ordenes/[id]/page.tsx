@@ -32,7 +32,7 @@ export default function ClientOrderPage() {
       </PageHero>
       <div className="container-x grid gap-8 py-12 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
-          <Link href="/mi-cuenta" className="inline-flex items-center gap-1 text-sm text-ink-900/60 hover:text-brand"><ArrowLeft className="h-4 w-4" /> Mis órdenes</Link>
+          <Link href="/mi-cuenta" className="inline-flex items-center gap-1 text-sm text-ink-900/60 hover:text-brand-ink"><ArrowLeft className="h-4 w-4" /> Mis órdenes</Link>
           <section className="card rounded-3xl p-6"><StatusStepper status={order.status} /></section>
 
           {photos.length > 0 && (
@@ -65,15 +65,15 @@ export default function ClientOrderPage() {
         <aside className="space-y-6">
           <section className="card space-y-3 rounded-3xl p-6 text-sm">
             <h3 className="font-bold">Detalles</h3>
-            {order.scheduledAt && <p className="flex gap-2"><CalendarClock className="h-4 w-4 text-brand" /> Programada: {date(order.scheduledAt, true)}</p>}
-            {order.technician && <p className="flex gap-2"><UserRound className="h-4 w-4 text-brand" /> Responsable: {order.technician.name}</p>}
+            {order.scheduledAt && <p className="flex gap-2"><CalendarClock className="h-4 w-4 text-brand-ink" /> Programada: {date(order.scheduledAt, true)}</p>}
+            {order.technician && <p className="flex gap-2"><UserRound className="h-4 w-4 text-brand-ink" /> Responsable: {order.technician.name}</p>}
             <p className="text-ink-900/60">{order.address}{order.city ? `, ${order.city}` : ''}</p>
             {order.quotedAmount && <p>Monto cotizado: <b>{money(order.quotedAmount)}</b></p>}
             {order.estimatedDelivery && <p>Entrega estimada: <b>{order.estimatedDelivery}</b></p>}
           </section>
 
           <section className="card rounded-3xl p-6">
-            <h3 className="mb-3 flex items-center gap-2 font-bold"><FileText className="h-4 w-4 text-brand" /> Documentos</h3>
+            <h3 className="mb-3 flex items-center gap-2 font-bold"><FileText className="h-4 w-4 text-brand-ink" /> Documentos</h3>
             {!order.documents?.length ? <p className="text-sm text-ink-900/50">Tus cotizaciones y facturas aparecerán aquí.</p> : (
               <ul className="space-y-2">
                 {order.documents.map((d) => (
@@ -82,7 +82,7 @@ export default function ClientOrderPage() {
                       <p className="font-semibold">{DOC_TYPES[d.type]} {d.number}</p>
                       <p className="text-xs text-ink-900/50">{money(d.amount, d.currency)} · {d.status}</p>
                     </div>
-                    {d.fileUrl && <a href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="grid h-9 w-9 place-items-center rounded-full bg-white text-brand hover:bg-brand hover:text-white" aria-label="Descargar"><Download className="h-4 w-4" /></a>}
+                    {d.fileUrl && <a href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="grid h-9 w-9 place-items-center rounded-full bg-paper text-brand-ink hover:bg-brand hover:text-white" aria-label="Descargar"><Download className="h-4 w-4" /></a>}
                   </li>
                 ))}
               </ul>

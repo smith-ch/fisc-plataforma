@@ -48,14 +48,14 @@ export default function AccountPage() {
         )}
         <div className="mb-6 flex gap-2">
           {(['ordenes', 'perfil'] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)} className={`rounded-full px-5 py-2 text-sm font-semibold ${tab === t ? 'bg-ink-900 text-white' : 'bg-white text-ink-900/60'}`}>
+            <button key={t} onClick={() => setTab(t)} className={`rounded-full px-5 py-2 text-sm font-semibold ${tab === t ? 'bg-ink-900 text-sand-50' : 'bg-paper text-ink-900/60'}`}>
               {t === 'ordenes' ? 'Mis órdenes' : 'Mi perfil'}
             </button>
           ))}
         </div>
 
         {tab === 'ordenes' && (!orders ? <Spinner /> : orders.length === 0 ? (
-          <Empty>Aún no tienes órdenes. <Link href="/solicitar" className="font-semibold text-brand">Solicita tu primer servicio</Link>.</Empty>
+          <Empty>Aún no tienes órdenes. <Link href="/solicitar" className="font-semibold text-brand-ink">Solicita tu primer servicio</Link>.</Empty>
         ) : (
           <div className="grid gap-4">
             {orders.map((o) => (
@@ -71,7 +71,7 @@ export default function AccountPage() {
                 </div>
                 <div className="text-right">
                   {o.quotedAmount && <p className="font-bold">{money(o.quotedAmount)}</p>}
-                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand">Ver detalle <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></span>
+                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand-ink">Ver detalle <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></span>
                 </div>
               </Link>
             ))}

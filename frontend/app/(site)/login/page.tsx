@@ -31,7 +31,7 @@ function LoginForm() {
       <div><label className="label">Contraseña</label><input name="password" type="password" required className="input" autoComplete="current-password" /></div>
       {error && <Alert>{error}</Alert>}
       <button className="btn-primary w-full py-3" disabled={loading}>{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />} Ingresar</button>
-      <p className="text-center text-sm text-ink-900/60">¿No tienes cuenta? <Link href={`/registro${next ? `?next=${next}` : ''}`} className="font-semibold text-brand">Regístrate</Link></p>
+      <p className="text-center text-sm text-ink-900/60">¿No tienes cuenta? <Link href={`/registro${next ? `?next=${next}` : ''}`} className="font-semibold text-brand-ink">Regístrate</Link></p>
     </form>
   );
 }

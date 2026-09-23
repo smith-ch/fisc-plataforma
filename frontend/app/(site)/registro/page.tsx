@@ -34,7 +34,7 @@ function RegisterForm() {
       <div className="sm:col-span-2"><label className="label">Contraseña *</label><input name="password" type="password" required minLength={6} className="input" autoComplete="new-password" /></div>
       {error && <div className="sm:col-span-2"><Alert>{error}</Alert></div>}
       <button className="btn-primary py-3 sm:col-span-2" disabled={loading}>{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />} Crear cuenta</button>
-      <p className="text-center text-sm text-ink-900/60 sm:col-span-2">¿Ya tienes cuenta? <Link href="/login" className="font-semibold text-brand">Inicia sesión</Link></p>
+      <p className="text-center text-sm text-ink-900/60 sm:col-span-2">¿Ya tienes cuenta? <Link href="/login" className="font-semibold text-brand-ink">Inicia sesión</Link></p>
     </form>
   );
 }

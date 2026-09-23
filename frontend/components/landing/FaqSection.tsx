@@ -13,7 +13,7 @@ export function FaqSection({ faqs }: { faqs: Faq[] }) {
     <section id="faq" className="bg-sand-50 py-28">
       <div className="container-x grid gap-12 lg:grid-cols-3">
         <Reveal>
-          <p className="eyebrow text-brand">Preguntas frecuentes</p>
+          <p className="eyebrow text-brand-ink">Preguntas frecuentes</p>
           <h2 className="mt-4 text-4xl font-bold tracking-tight">¿Tienes dudas?</h2>
           <p className="mt-4 text-ink-900/60">Si no encuentras tu respuesta, escríbenos por WhatsApp.</p>
         </Reveal>
@@ -22,7 +22,7 @@ export function FaqSection({ faqs }: { faqs: Faq[] }) {
             <div key={f.id}>
               <button onClick={() => setOpen(open === f.id ? null : f.id)} className="flex w-full items-center justify-between gap-6 py-6 text-left text-lg font-semibold">
                 {f.question}
-                <Plus className={`h-5 w-5 shrink-0 text-brand transition-transform duration-300 ${open === f.id ? 'rotate-45' : ''}`} />
+                <Plus className={`h-5 w-5 shrink-0 text-brand-ink transition-transform duration-300 ${open === f.id ? 'rotate-45' : ''}`} />
               </button>
               <AnimatePresence initial={false}>
                 {open === f.id && (

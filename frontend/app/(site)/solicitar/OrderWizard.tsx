@@ -99,7 +99,7 @@ export function OrderWizard() {
         </motion.div>
         <h2 className="mt-6 text-3xl font-bold">¡Solicitud recibida!</h2>
         <p className="mt-3 text-ink-900/65">Tu número de orden es</p>
-        <p className="mt-2 font-display text-4xl font-bold tracking-wider text-brand">{done.code}</p>
+        <p className="mt-2 font-display text-4xl font-bold tracking-wider text-brand-ink">{done.code}</p>
         <p className="mx-auto mt-4 max-w-md text-ink-900/65">Un supervisor te contactará para coordinar el levantamiento. Puedes ver el estado de tu orden en todo momento.</p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           {user ? <Link href={`/mi-cuenta/ordenes/${done.id}`} className="btn-primary">Ver mi orden</Link>
@@ -122,7 +122,7 @@ export function OrderWizard() {
             <li key={s.title}>
               <button type="button" onClick={() => i < step && setStep(i)} disabled={i > step}
                 className={`flex w-full flex-col items-center gap-2 rounded-2xl border p-3 text-xs font-semibold transition sm:flex-row sm:text-sm ${
-                  i === step ? 'border-brand bg-brand text-white' : i < step ? 'border-brand/30 bg-brand-soft text-brand' : 'border-ink-900/10 text-ink-900/40'}`}>
+                  i === step ? 'border-brand bg-brand text-white' : i < step ? 'border-brand/30 bg-brand-soft text-brand-ink' : 'border-ink-900/10 text-ink-900/40'}`}>
                 <s.icon className="h-4 w-4" /> {s.title}
               </button>
             </li>
@@ -161,9 +161,9 @@ export function OrderWizard() {
                       <div key={i.serviceId} className="flex flex-col gap-2 rounded-2xl bg-sand-50 p-3 sm:flex-row sm:items-center">
                         <span className="flex-1 text-sm font-medium">{i.name}</span>
                         <div className="flex items-center gap-1">
-                          <button type="button" onClick={() => cart.update(i.serviceId, { quantity: Math.max(1, i.quantity - 1) })} className="grid h-8 w-8 place-items-center rounded-full bg-white"><Minus className="h-3 w-3" /></button>
+                          <button type="button" onClick={() => cart.update(i.serviceId, { quantity: Math.max(1, i.quantity - 1) })} className="grid h-8 w-8 place-items-center rounded-full bg-paper"><Minus className="h-3 w-3" /></button>
                           <span className="w-8 text-center text-sm font-bold">{i.quantity}</span>
-                          <button type="button" onClick={() => cart.update(i.serviceId, { quantity: i.quantity + 1 })} className="grid h-8 w-8 place-items-center rounded-full bg-white"><Plus className="h-3 w-3" /></button>
+                          <button type="button" onClick={() => cart.update(i.serviceId, { quantity: i.quantity + 1 })} className="grid h-8 w-8 place-items-center rounded-full bg-paper"><Plus className="h-3 w-3" /></button>
                         </div>
                         <input value={i.notes} onChange={(e) => cart.update(i.serviceId, { notes: e.target.value })} placeholder="Ej.: 3 habitaciones, techo de 80 m²…" className="input sm:w-72" />
                       </div>
@@ -211,7 +211,7 @@ export function OrderWizard() {
                     { v: 'virtual', t: 'Evaluación virtual', d: 'Por videollamada, ideal para trabajos pequeños', i: Video }].map((o) => (
                     <button key={o.v} type="button" onClick={() => setForm({ ...form, visitType: o.v })}
                       className={`flex gap-3 rounded-2xl border p-4 text-left transition ${form.visitType === o.v ? 'border-brand bg-brand-soft' : 'border-ink-900/10'}`}>
-                      <o.i className="h-6 w-6 shrink-0 text-brand" /><span><span className="block font-bold">{o.t}</span><span className="text-xs text-ink-900/55">{o.d}</span></span>
+                      <o.i className="h-6 w-6 shrink-0 text-brand-ink" /><span><span className="block font-bold">{o.t}</span><span className="text-xs text-ink-900/55">{o.d}</span></span>
                     </button>
                   ))}
                 </div>
@@ -235,7 +235,7 @@ export function OrderWizard() {
                   <div className="rounded-2xl bg-sand-100 p-4 sm:col-span-2">
                     <label className="label">Crea tu cuenta (opcional)</label>
                     <input type="password" value={form.password} onChange={set('password')} className="input" placeholder="Contraseña para acceder a tu portal" />
-                    <p className="mt-2 text-xs text-ink-900/55">Con una cuenta verás el avance con fotos, tus cotizaciones y facturas. ¿Ya tienes cuenta? <Link href="/login?next=/solicitar" className="font-semibold text-brand">Inicia sesión</Link></p>
+                    <p className="mt-2 text-xs text-ink-900/55">Con una cuenta verás el avance con fotos, tus cotizaciones y facturas. ¿Ya tienes cuenta? <Link href="/login?next=/solicitar" className="font-semibold text-brand-ink">Inicia sesión</Link></p>
                   </div>
                 )}
               </div>
@@ -260,7 +260,7 @@ export function OrderWizard() {
             <ul className="mt-4 space-y-2">
               {cart.items.map((i) => (
                 <li key={i.serviceId} className="flex items-center gap-2 text-sm">
-                  <ServiceIcon name={i.icon} className="h-4 w-4 text-brand" /><span className="flex-1">{i.name}</span><span className="text-ink-900/50">×{i.quantity}</span>
+                  <ServiceIcon name={i.icon} className="h-4 w-4 text-brand-ink" /><span className="flex-1">{i.name}</span><span className="text-ink-900/50">×{i.quantity}</span>
                 </li>
               ))}
             </ul>

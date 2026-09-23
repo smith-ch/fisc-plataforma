@@ -18,7 +18,7 @@ export function CartDrawer() {
             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }}
             data-lenis-prevent>
             <div className="flex items-center justify-between border-b border-ink-900/10 p-5">
-              <h3 className="flex items-center gap-2 text-lg font-bold"><ShoppingBag className="h-5 w-5 text-brand" /> Tu solicitud</h3>
+              <h3 className="flex items-center gap-2 text-lg font-bold"><ShoppingBag className="h-5 w-5 text-brand-ink" /> Tu solicitud</h3>
               <button onClick={() => cart.setOpen(false)} aria-label="Cerrar" className="grid h-9 w-9 place-items-center rounded-full hover:bg-ink-900/5"><X className="h-5 w-5" /></button>
             </div>
             <div className="flex-1 space-y-3 overflow-y-auto p-5">
@@ -30,7 +30,7 @@ export function CartDrawer() {
                 </div>
               ) : cart.items.map((i) => (
                 <div key={i.serviceId} className="card flex items-center gap-3 p-3">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand"><ServiceIcon name={i.icon} className="h-5 w-5" /></span>
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand-ink"><ServiceIcon name={i.icon} className="h-5 w-5" /></span>
                   <span className="flex-1 text-sm font-semibold">{i.name}</span>
                   <button onClick={() => cart.remove(i.serviceId)} aria-label="Quitar" className="grid h-8 w-8 place-items-center rounded-full text-ink-900/40 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="h-4 w-4" /></button>
                 </div>

@@ -24,7 +24,7 @@ export function Modal({ open, onClose, title, children, wide = false }: { open: 
         <div className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto p-4 sm:items-center">
           <motion.div className="fixed inset-0 bg-ink-950/50 backdrop-blur-sm" onClick={onClose} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
           <motion.div initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }}
-            className={`relative my-8 w-full ${wide ? 'max-w-3xl' : 'max-w-lg'} rounded-3xl bg-white p-6 shadow-2xl`}>
+            className={`relative my-8 w-full ${wide ? 'max-w-3xl' : 'max-w-lg'} rounded-3xl bg-paper p-6 shadow-2xl`}>
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-bold">{title}</h2>
               <button onClick={onClose} aria-label="Cerrar" className="grid h-9 w-9 place-items-center rounded-full hover:bg-ink-900/5"><X className="h-5 w-5" /></button>
@@ -56,8 +56,8 @@ export function ImageField({ label, value, onChange, dark = false }: { label: st
       <label className="label">{label}</label>
       <div className="flex items-center gap-3">
         <button type="button" onClick={() => input.current?.click()}
-          className={`relative grid h-20 w-28 shrink-0 place-items-center overflow-hidden rounded-xl border border-dashed border-ink-900/20 ${dark ? 'bg-ink-900' : 'bg-sand-50'} hover:border-brand`}>
-          {busy ? <Loader2 className="h-5 w-5 animate-spin text-brand" /> : value ? (
+          className={`relative grid h-20 w-28 shrink-0 place-items-center overflow-hidden rounded-xl border border-dashed border-ink-900/20 ${dark ? 'bg-ink-950' : 'bg-sand-50'} hover:border-brand`}>
+          {busy ? <Loader2 className="h-5 w-5 animate-spin text-brand-ink" /> : value ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={value} alt="" className="h-full w-full object-contain" />
           ) : <ImagePlus className="h-6 w-6 text-ink-900/30" />}
@@ -94,7 +94,7 @@ export function Toast({ msg, onClose }: { msg: { tone: 'error' | 'success'; text
       {msg && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
           onAnimationComplete={() => setTimeout(onClose, 2800)}
-          className={`fixed right-5 bottom-5 z-[90] rounded-2xl px-5 py-3 text-sm font-medium text-white shadow-xl ${msg.tone === 'error' ? 'bg-rose-600' : 'bg-ink-900'}`}>
+          className={`fixed right-5 bottom-5 z-[90] rounded-2xl px-5 py-3 text-sm font-medium text-white shadow-xl ${msg.tone === 'error' ? 'bg-rose-600' : 'bg-ink-950'}`}>
           {msg.text}
         </motion.div>
       )}

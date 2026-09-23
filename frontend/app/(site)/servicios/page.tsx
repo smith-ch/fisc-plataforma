@@ -32,8 +32,8 @@ export default async function ServicesPage() {
                 <Reveal key={s.id} delay={(i % 3) * 0.08}>
                   <SpotlightCard className="card group h-full rounded-3xl">
                     <Link href={`/servicios/${s.slug}`} className="flex h-full flex-col p-6">
-                      <span className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-brand-soft text-brand transition group-hover:scale-110"><ServiceIcon name={s.icon} className="h-6 w-6" /></span>
-                      <h3 className="flex justify-between gap-2 text-lg font-bold">{s.name}<ArrowUpRight className="h-5 w-5 shrink-0 text-ink-900/30 group-hover:text-brand" /></h3>
+                      <span className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-brand-soft text-brand-ink transition group-hover:scale-110"><ServiceIcon name={s.icon} className="h-6 w-6" /></span>
+                      <h3 className="flex justify-between gap-2 text-lg font-bold">{s.name}<ArrowUpRight className="h-5 w-5 shrink-0 text-ink-900/30 group-hover:text-brand-ink" /></h3>
                       <p className="mt-2 flex-1 text-sm text-ink-900/60">{s.shortDescription}</p>
                       <div className="mt-5"><AddToCart service={s} className="btn-sm" label="Agregar a solicitud" /></div>
                     </Link>

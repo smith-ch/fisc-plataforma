@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
 import { Providers } from '@/components/providers';
+import { ThemeProvider } from '@/components/theme';
+import { themeScript } from '@/lib/theme-script';
 import { getContent } from '@/lib/server';
 import './globals.css';
 
@@ -17,9 +19,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const { settings } = await getContent();
   const style = { '--brand': settings.brand.primaryColor, '--accent': settings.brand.accentColor } as React.CSSProperties;
   return (
-    <html lang="es" style={style} className={`${body.variable} ${display.variable}`}>
+    // suppressHydrationWarning: `themeScript` añade la clase `dark` antes de hidratar
+    <html lang="es" style={style} className={`${body.variable} ${display.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="font-sans">
-        <Providers>{children}</Providers>
+        <ThemeProvider>
+          <Providers>{children}</Providers>
+        </ThemeProvider>
       </body>
     </html>
   );

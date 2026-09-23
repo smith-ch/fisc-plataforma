@@ -18,9 +18,9 @@ export function Pillars({ pillars }: { pillars: Pillar[] }) {
     <section id="servicios" className="relative bg-sand-50">
       <div className="container-x pt-28 pb-10">
         <Reveal>
-          <p className="eyebrow text-brand">Nuestros servicios</p>
+          <p className="eyebrow text-brand-ink">Nuestros servicios</p>
           <h2 className="mt-4 max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">
-            Tres pilares, <span className="font-display font-medium text-brand">un solo aliado</span> para tu espacio.
+            Tres pilares, <span className="font-display font-medium text-brand-ink">un solo aliado</span> para tu espacio.
           </h2>
         </Reveal>
       </div>
@@ -71,7 +71,7 @@ function PillarScene({ pillar, index }: { pillar: Pillar; index: number }) {
                   )}
                   <h4 className="flex items-start justify-between gap-3 text-lg font-bold">
                     {s.name}
-                    <ArrowUpRight className="h-5 w-5 shrink-0 text-ink-900/30 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brand" />
+                    <ArrowUpRight className="h-5 w-5 shrink-0 text-ink-900/30 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brand-ink" />
                   </h4>
                   <p className="mt-2 flex-1 text-sm text-ink-900/60">{s.shortDescription}</p>
                   <div className="mt-5 flex items-center justify-between gap-2">
