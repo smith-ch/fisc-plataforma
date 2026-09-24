@@ -18,6 +18,7 @@ export class CreateUserDto {
   @IsOptional() @IsString() documentId?: string;
   @IsOptional() @IsString() address?: string;
   @IsOptional() @IsString() specialty?: string;
+  @IsOptional() @IsBoolean() concrebillSync?: boolean;
 }
 
 export class UpdateUserDto {
@@ -30,4 +31,5 @@ export class UpdateUserDto {
   @IsOptional() @IsString() address?: string;
   @IsOptional() @IsString() specialty?: string;
   @IsOptional() @IsBoolean() active?: boolean;
+  @IsOptional() @IsBoolean() concrebillSync?: boolean;
 }

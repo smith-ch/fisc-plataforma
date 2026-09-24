@@ -34,7 +34,7 @@ export function Process({ process }: { process: Settings['process'] }) {
           </div>
         </div>
         <div className="relative z-10 flex flex-1 items-center">
-          <motion.div style={{ x, width: `${n * 100}%` }} className="flex h-full">
+          <motion.div style={{ x, width: `${n * 100}%` }} className="flex h-full shrink-0">
             {process.phases.map((phase, i) => {
               const Icon = PHASE_ICONS[i % PHASE_ICONS.length];
               return (

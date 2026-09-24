@@ -38,6 +38,10 @@ export class User {
   @Column({ type: 'varchar', length: 80, nullable: true })
   concrebillClientId: string | null;
 
+  /** Mientras se prueba la integración, sólo los clientes marcados aquí se sincronizan con Concrebill. */
+  @Column({ type: 'boolean', default: false })
+  concrebillSync: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

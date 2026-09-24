@@ -68,13 +68,19 @@ export class AuthService {
     return this.me(id);
   }
 
-  /** Sincroniza el perfil del cliente con Concrebill (crea o actualiza). */
-  async syncClient(user: User) {
+  /**
+   * Sincroniza el perfil del cliente con Concrebill (crea o actualiza). No hace nada si el
+   * cliente no tiene la sincronización activada. Devuelve el id de Concrebill (nuevo o el que
+   * ya tenía) para que quien llama pueda encadenar otra operación (ej. crear una orden).
+   */
+  async syncClient(user: User): Promise<string | null> {
+    if (!user.concrebillSync) return null;
     const id = await this.concrebill.upsertClient({
       name: user.name, email: user.email, phone: user.phone, documentId: user.documentId, address: user.address,
       externalId: `web-${user.id}`,
     }, user.concrebillClientId);
     if (id && id !== user.concrebillClientId) await this.users.update(user.id, { concrebillClientId: id });
+    return id;
   }
 
   private session(user: User) {

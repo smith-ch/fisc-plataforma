@@ -3,7 +3,7 @@ export type OrderStatus = 'recibida' | 'en_levantamiento' | 'cotizada' | 'en_eje
 
 export interface User {
   id: number; name: string; email: string; phone: string | null; documentId: string | null; address: string | null;
-  role: Role; specialty: string | null; active: boolean; concrebillClientId: string | null; createdAt: string;
+  role: Role; specialty: string | null; active: boolean; concrebillClientId: string | null; concrebillSync: boolean; createdAt: string;
 }
 
 export interface Pillar {
@@ -41,6 +41,7 @@ export interface Order {
   preferredDate: string | null; preferredTime: string | null; visitType: string; notes: string | null; source: string;
   status: OrderStatus; technician: User | null; scheduledAt: string | null; quotedAmount: string | null;
   estimatedDelivery: string | null; paymentStatus: 'pendiente' | 'en_revision' | 'pagado'; internalNotes?: string | null;
+  concrebillOrderId?: string | null;
   items: OrderItem[]; updates?: OrderUpdate[]; photos?: OrderPhoto[]; documents?: BillingDocument[]; payments?: Payment[];
   review?: Review | null; createdAt: string; updatedAt: string;
 }
@@ -60,3 +61,21 @@ export interface Settings {
 }
 
 export interface SiteContent { settings: Settings; testimonials: Testimonial[]; faqs: Faq[]; projects: Project[] }
+
+export interface Lead { id: number; name: string; phone: string; email: string | null; message: string; handled: boolean; createdAt: string }
+
+export interface DashboardData {
+  byStatus: Record<OrderStatus, number>;
+  bySource: Record<string, number>;
+  newThisWeek: number;
+  pendingPayments: number;
+  avgRating: number | null;
+  reviewCount: number;
+  openLeads: number;
+  recent: Order[];
+}
+
+export interface IntegrationLog {
+  id: number; action: string; status: 'ok' | 'error' | 'simulado' | string;
+  request: unknown; response: unknown; error: string | null; createdAt: string;
+}

@@ -1,18 +1,20 @@
 import { Quote, Star } from 'lucide-react';
+import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
 import { Reveal } from '@/components/fx/effects';
 import type { Testimonial } from '@/lib/types';
 
 export function Testimonials({ items }: { items: Testimonial[] }) {
   if (!items.length) return null;
   return (
-    <section className="overflow-hidden bg-sand-100 py-28">
-      <div className="container-x">
+    <section className="relative overflow-hidden bg-sand-100 py-28">
+      <InteractiveBackground className="opacity-70" />
+      <div className="container-x relative z-10">
         <Reveal>
           <p className="eyebrow text-brand-ink">Tú evalúas</p>
           <h2 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">Lo que dicen nuestros clientes</h2>
         </Reveal>
       </div>
-      <div className="mt-12 flex w-max animate-marquee gap-5 px-4 [animation-duration:60s] hover:[animation-play-state:paused]">
+      <div className="relative z-10 mt-12 flex w-max animate-marquee gap-5 px-4 [animation-duration:60s] hover:[animation-play-state:paused]">
         {[...items, ...items].map((t, i) => (
           <figure key={i} className="w-[340px] shrink-0 rounded-3xl border border-ink-900/10 bg-paper p-7 sm:w-[400px]">
             <Quote className="h-8 w-8 text-brand-ink/30" />

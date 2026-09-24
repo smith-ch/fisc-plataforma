@@ -67,13 +67,27 @@ export class OrdersService {
       message: 'Solicitud recibida. Un supervisor te contactará para coordinar el levantamiento.',
     }));
 
-    // Sincroniza el cliente con Concrebill (completa RNC/Cédula si no lo tenía)
+    // Sincroniza el cliente con Concrebill (completa RNC/Cédula si no lo tenía) y, si está
+    // sincronizado, crea allá la orden de trabajo (pendiente de que el equipo la cotice).
     if (client) {
       if (!client.documentId && dto.documentId) client.documentId = dto.documentId;
       if (!client.address) client.address = dto.address;
       if (!client.phone) client.phone = dto.contactPhone;
       await this.users.save(client);
-      await this.auth.syncClient(client);
+      const concrebillClientId = await this.auth.syncClient(client);
+      if (concrebillClientId) {
+        const res = await this.concrebill.createOrder({
+          clientId: concrebillClientId,
+          code: order.code!,
+          contactPhone: dto.contactPhone,
+          address: dto.address,
+          urgency: dto.urgency,
+          preferredDate: dto.preferredDate,
+          notes: dto.notes,
+          items: items.map((i) => ({ description: byId.get(i.serviceId)!.name, quantity: i.quantity ?? 1 })),
+        });
+        if (res?.id) await this.orders.update(order.id, { concrebillOrderId: res.id });
+      }
     }
     return { id: order.id, code: order.code };
   }
@@ -245,7 +259,8 @@ export class OrdersService {
   async syncDocuments(id: number) {
     const order = await this.orders.findOne({ where: { id }, relations: { client: true, documents: true } });
     if (!order) throw new NotFoundException();
-    if (!order.client?.concrebillClientId) throw new BadRequestException('El cliente aún no está sincronizado con Concrebill');
+    if (!order.client?.concrebillSync) throw new BadRequestException('Este cliente no tiene activada la sincronización con Concrebill');
+    if (!order.client.concrebillClientId) throw new BadRequestException('El cliente aún no está sincronizado con Concrebill');
     const remote = await this.concrebill.listClientDocuments(order.client.concrebillClientId);
     let created = 0;
     for (const d of remote.filter((r) => r.reference === order.code)) {
@@ -299,7 +314,7 @@ export class OrdersService {
    * ("Registrar pago y emitir recibo para la factura X").
    */
   async reviewPayment(paymentId: number, user: AuthUser, dto: ReviewPaymentDto) {
-    const payment = await this.payments.findOne({ where: { id: paymentId }, relations: { order: true } });
+    const payment = await this.payments.findOne({ where: { id: paymentId }, relations: { order: { client: true } } });
     if (!payment) throw new NotFoundException();
     if (payment.status !== PaymentRecordStatus.PENDING) throw new BadRequestException('Este pago ya fue procesado');
     payment.status = dto.status;
@@ -308,13 +323,17 @@ export class OrdersService {
     const orderId = payment.order.id;
 
     if (dto.status === PaymentRecordStatus.APPROVED) {
-      const invoice = payment.document
-        ?? (await this.documents.findOne({ where: { order: { id: orderId }, type: DocumentType.INVOICE }, order: { createdAt: 'DESC' } }));
-      const res = await this.concrebill.registerPayment({
-        invoiceId: invoice?.concrebillId || invoice?.number || payment.order.code || String(orderId),
-        amount: Number(payment.amount), method: payment.method, reference: payment.reference,
-        date: new Date().toISOString().slice(0, 10),
-      });
+      // Si el cliente no tiene la sincronización con Concrebill activada, el pago queda validado
+      // en la web y el recibo se registra manualmente desde el panel.
+      const res = payment.order.client?.concrebillSync ? await (async () => {
+        const invoice = payment.document
+          ?? (await this.documents.findOne({ where: { order: { id: orderId }, type: DocumentType.INVOICE }, order: { createdAt: 'DESC' } }));
+        return this.concrebill.registerPayment({
+          invoiceId: invoice?.concrebillId || invoice?.number || payment.order.code || String(orderId),
+          amount: Number(payment.amount), method: payment.method, reference: payment.reference,
+          date: new Date().toISOString().slice(0, 10),
+        });
+      })() : null;
       if (res) {
         payment.concrebillPaymentId = res.id;
         if (res.receiptNumber) {

@@ -5,6 +5,7 @@ import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRef } from 'react';
 import { ServiceIcon } from '@/components/Icon';
+import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
 import { Reveal, SpotlightCard } from '@/components/fx/effects';
 import { AddToCart } from '@/components/site/AddToCart';
 import type { Pillar } from '@/lib/types';
@@ -15,16 +16,19 @@ import type { Pillar } from '@/lib/types';
  */
 export function Pillars({ pillars }: { pillars: Pillar[] }) {
   return (
-    <section id="servicios" className="relative bg-sand-50">
-      <div className="container-x pt-28 pb-10">
-        <Reveal>
-          <p className="eyebrow text-brand-ink">Nuestros servicios</p>
-          <h2 className="mt-4 max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">
-            Tres pilares, <span className="font-display font-medium text-brand-ink">un solo aliado</span> para tu espacio.
-          </h2>
-        </Reveal>
+    <section id="servicios" className="relative overflow-hidden bg-sand-50">
+      <InteractiveBackground className="opacity-70" />
+      <div className="relative z-10">
+        <div className="container-x pt-28 pb-10">
+          <Reveal>
+            <p className="eyebrow text-brand-ink">Nuestros servicios</p>
+            <h2 className="mt-4 max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">
+              Tres pilares, <span className="font-display font-medium text-brand-ink">un solo aliado</span> para tu espacio.
+            </h2>
+          </Reveal>
+        </div>
+        {pillars.map((p, i) => <PillarScene key={p.id} pillar={p} index={i} />)}
       </div>
-      {pillars.map((p, i) => <PillarScene key={p.id} pillar={p} index={i} />)}
     </section>
   );
 }

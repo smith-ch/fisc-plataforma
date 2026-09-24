@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
 import { Reveal } from '@/components/fx/effects';
 import type { Faq } from '@/lib/types';
 
@@ -10,8 +11,9 @@ export function FaqSection({ faqs }: { faqs: Faq[] }) {
   const [open, setOpen] = useState<number | null>(0);
   if (!faqs.length) return null;
   return (
-    <section id="faq" className="bg-sand-50 py-28">
-      <div className="container-x grid gap-12 lg:grid-cols-3">
+    <section id="faq" className="relative overflow-hidden bg-sand-50 py-28">
+      <InteractiveBackground className="opacity-70" />
+      <div className="container-x relative z-10 grid gap-12 lg:grid-cols-3">
         <Reveal>
           <p className="eyebrow text-brand-ink">Preguntas frecuentes</p>
           <h2 className="mt-4 text-4xl font-bold tracking-tight">¿Tienes dudas?</h2>

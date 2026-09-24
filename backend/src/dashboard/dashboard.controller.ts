@@ -2,6 +2,7 @@ import { Controller, Get, Patch, Param, ParseIntPipe, Body } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThanOrEqual, Repository } from 'typeorm';
 import { OrderStatus, PaymentRecordStatus, Role } from '../common/enums';
+import { ConcrebillService } from '../concrebill/concrebill.service';
 import { Roles } from '../common/roles.decorator';
 import { IntegrationLog, Lead, Order, Payment, Review } from '../entities';
 
@@ -14,6 +15,7 @@ export class DashboardController {
     @InjectRepository(Review) private readonly reviews: Repository<Review>,
     @InjectRepository(Lead) private readonly leads: Repository<Lead>,
     @InjectRepository(IntegrationLog) private readonly logs: Repository<IntegrationLog>,
+    private readonly concrebill: ConcrebillService,
   ) {}
 
   @Get('dashboard')
@@ -55,7 +57,8 @@ export class DashboardController {
   }
 
   @Get('integration-logs')
-  integrationLogs() {
-    return this.logs.find({ order: { createdAt: 'DESC' }, take: 100 });
+  async integrationLogs() {
+    const logs = await this.logs.find({ order: { createdAt: 'DESC' }, take: 100 });
+    return { enabled: this.concrebill.enabled, logs };
   }
 }

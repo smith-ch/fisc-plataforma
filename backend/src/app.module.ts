@@ -23,7 +23,12 @@ import { UsersModule } from './users/users.module';
 function databaseConfig(config: ConfigService): TypeOrmModuleOptions {
   const synchronize = config.get('DB_SYNCHRONIZE', 'true') === 'true';
   if (config.get('DB_TYPE') === 'postgres') {
-    return { type: 'postgres', url: config.get('DATABASE_URL'), entities: ENTITIES, synchronize };
+    // Esquema propio para que, si la base se comparte con Concrebill (u otro sistema),
+    // las tablas de la web (users, orders, ...) no choquen con las suyas.
+    const schema = config.get('DB_SCHEMA', 'fisc');
+    // Proveedores como Supabase exigen TLS en la conexión directa.
+    const ssl = config.get('DB_SSL', 'true') === 'true' ? { rejectUnauthorized: config.get('DB_SSL_REJECT_UNAUTHORIZED', 'false') === 'true' } : false;
+    return { type: 'postgres', url: config.get('DATABASE_URL'), entities: ENTITIES, synchronize, schema, ssl };
   }
   const database = config.get('DB_SQLITE_PATH', 'data/plataforma.sqlite');
   mkdirSync(dirname(database), { recursive: true });

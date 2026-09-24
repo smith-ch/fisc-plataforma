@@ -21,6 +21,18 @@ export interface ConcrebillPaymentPayload {
   date?: string;
 }
 
+export interface ConcrebillOrderPayload {
+  clientId: string;
+  /** Código de la orden en FISC (ej. "ORD-000012"), para poder relacionarla después. */
+  code: string;
+  contactPhone?: string | null;
+  address?: string | null;
+  urgency?: string;
+  preferredDate?: string | null;
+  notes?: string | null;
+  items: { description: string; quantity: number }[];
+}
+
 export interface ConcrebillDocument {
   id: string;
   type: 'cotizacion' | 'factura' | 'recibo';
@@ -42,6 +54,11 @@ export interface ConcrebillDocument {
  * consulta cotizaciones/facturas y registra pagos. Con CONCREBILL_ENABLED=false
  * trabaja en modo simulado para poder operar el MVP mientras se obtiene acceso
  * a la API. Todas las llamadas quedan en la bitácora `integration_logs`.
+ *
+ * Aparte del flag global, cada cliente tiene su propio `User.concrebillSync`
+ * (ver auth.service.syncClient y orders.service): mientras se prueba la
+ * integración sólo los clientes marcados se sincronizan; el resto se maneja
+ * manualmente desde el panel (cotizaciones, facturas y pagos a mano).
  *
  * Los endpoints usados (ajustables cuando se tenga la documentación oficial):
  *   POST /clients                     → crear/actualizar cliente
@@ -76,6 +93,12 @@ export class ConcrebillService {
   async registerPayment(payload: ConcrebillPaymentPayload): Promise<{ id: string; receiptNumber?: string; receiptUrl?: string } | null> {
     return this.call('registerPayment', 'POST', `/invoices/${encodeURIComponent(payload.invoiceId)}/payments`, payload,
       () => ({ id: `CB-PAY-${Date.now().toString(36).toUpperCase()}`, receiptNumber: `REC-${Date.now().toString().slice(-6)}` }));
+  }
+
+  /** Crea la orden de trabajo en Concrebill (pendiente de aprobación/cotización). */
+  async createOrder(payload: ConcrebillOrderPayload): Promise<{ id: string; orderNumber?: string } | null> {
+    return this.call('createOrder', 'POST', '/orders', payload,
+      () => ({ id: `CB-ORD-${Date.now().toString(36).toUpperCase()}`, orderNumber: `OT-${Date.now().toString().slice(-6)}` }));
   }
 
   /** Ejecuta la petición (o la simulación) y la registra en la bitácora. Nunca lanza: devuelve null en error. */

@@ -2,6 +2,7 @@
 
 import { MoveHorizontal } from 'lucide-react';
 import { useState } from 'react';
+import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
 import { Reveal } from '@/components/fx/effects';
 import type { Project } from '@/lib/types';
 
@@ -9,8 +10,9 @@ import type { Project } from '@/lib/types';
 export function Projects({ projects }: { projects: Project[] }) {
   if (!projects.length) return null;
   return (
-    <section id="trabajos" className="bg-sand-50 py-28">
-      <div className="container-x">
+    <section id="trabajos" className="relative overflow-hidden bg-sand-50 py-28">
+      <InteractiveBackground className="opacity-70" />
+      <div className="container-x relative z-10">
         <Reveal>
           <p className="eyebrow text-brand-ink">Trabajos realizados</p>
           <h2 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">Antes <span className="font-display font-medium text-brand-ink">&amp;</span> después</h2>

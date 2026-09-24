@@ -1,10 +1,12 @@
+import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
 import { CountUp, Reveal } from '@/components/fx/effects';
 import type { Settings } from '@/lib/types';
 
 export function About({ about }: { about: Settings['about'] }) {
   return (
-    <section className="bg-sand-100 py-28">
-      <div className="container-x grid gap-14 lg:grid-cols-2">
+    <section className="relative overflow-hidden bg-sand-100 py-28">
+      <InteractiveBackground className="opacity-70" />
+      <div className="container-x relative z-10 grid gap-14 lg:grid-cols-2">
         <Reveal>
           <p className="eyebrow text-brand-ink">Fuera de preocupación</p>
           <h2 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">{about.title}</h2>

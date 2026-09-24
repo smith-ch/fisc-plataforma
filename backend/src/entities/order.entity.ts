@@ -88,6 +88,10 @@ export class Order {
   @Column({ type: 'text', nullable: true })
   internalNotes: string | null;
 
+  /** Id de la orden de trabajo creada en Concrebill (solo si el cliente tiene concrebillSync activo). */
+  @Column({ type: 'varchar', length: 80, nullable: true })
+  concrebillOrderId: string | null;
+
   @OneToMany(() => OrderItem, (i) => i.order, { cascade: true })
   items: OrderItem[];
 

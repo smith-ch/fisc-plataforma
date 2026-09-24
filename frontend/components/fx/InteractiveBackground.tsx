@@ -47,6 +47,9 @@ export function InteractiveBackground({ colors = ['#3E4A52', '#8FA4B0', '#1f2a30
     let cols = 0, gap = 32;
     const ripples: Ripple[] = [];
     const mouse = { x: 0.5, y: 0.4, tx: 0.5, ty: 0.4, px: -9999, py: -9999, vx: 0, vy: 0, active: false, lastMove: 0 };
+    // Estado del "empuje" de scroll: cada tramo desplazado dispara una onda que
+    // entra por el borde de la sección hacia el que se está desplazando.
+    let lastScrollY = window.scrollY, lastRippleAt = 0;
 
     const blobs = colors.map((c, i) => ({
       color: c,
@@ -246,6 +249,28 @@ export function InteractiveBackground({ colors = ['#3E4A52', '#8FA4B0', '#1f2a30
 
     function onLeave() { mouse.active = false; mouse.px = mouse.py = -9999; }
 
+    /**
+     * El efecto también reacciona al scroll, no sólo al cursor: cada tramo
+     * desplazado dispara una onda que entra por el borde de la sección hacia
+     * el que uno se mueve (arriba al bajar, abajo al subir), así la malla se
+     * "activa" de sección en sección a medida que se recorre la página.
+     */
+    function onScroll() {
+      if (reduced) return;
+      const sy = window.scrollY;
+      const dy = sy - lastScrollY;
+      lastScrollY = sy;
+      const now = performance.now();
+      if (Math.abs(dy) < 4 || now - lastRippleAt < 140) return;
+      lastRippleAt = now;
+      const rect = wrap.getBoundingClientRect();
+      // Sólo si la sección está cerca de la pantalla (evita trabajo en secciones lejanas).
+      if (rect.bottom < -200 || rect.top > window.innerHeight + 200) return;
+      const power = Math.min(1, Math.abs(dy) / 45);
+      ripples.push({ x: w * (0.35 + Math.random() * 0.3), y: dy > 0 ? 0 : h, t0: now, power });
+      if (ripples.length > 6) ripples.shift();
+    }
+
     const io = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; });
     io.observe(wrap);
     const ro = new ResizeObserver(resize);
@@ -256,6 +281,7 @@ export function InteractiveBackground({ colors = ['#3E4A52', '#8FA4B0', '#1f2a30
     resize();
     window.addEventListener('pointermove', onMove, { passive: true });
     window.addEventListener('pointerdown', onDown, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
     root.addEventListener('pointerleave', onLeave);
     if (reduced) draw();
     else {
@@ -271,6 +297,7 @@ export function InteractiveBackground({ colors = ['#3E4A52', '#8FA4B0', '#1f2a30
       mo.disconnect();
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('scroll', onScroll);
       root.removeEventListener('pointerleave', onLeave);
     };
   }, [colors.join(','), dots]); // eslint-disable-line react-hooks/exhaustive-deps
