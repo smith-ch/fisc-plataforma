@@ -66,7 +66,7 @@ function PillarScene({ pillar, index }: { pillar: Pillar; index: number }) {
                 <Link href={`/servicios/${s.slug}`} className="flex h-full flex-col p-6">
                   {s.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={s.imageUrl} alt={s.name} className="-mx-6 -mt-6 mb-5 h-40 w-[calc(100%+3rem)] max-w-none object-cover transition duration-700 group-hover:scale-105" />
+                    <img src={s.imageUrl} alt={s.name} loading="lazy" decoding="async" className="-mx-6 -mt-6 mb-5 h-40 w-[calc(100%+3rem)] max-w-none object-cover transition duration-700 group-hover:scale-105" />
                   ) : (
                     <span className="mb-5 grid h-12 w-12 place-items-center rounded-2xl transition duration-500 group-hover:scale-110 group-hover:rotate-6"
                       style={{ background: `${color}18`, color }}>

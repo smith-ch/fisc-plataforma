@@ -25,7 +25,7 @@ export function Testimonials({ items }: { items: Testimonial[] }) {
             <figcaption className="mt-5 flex items-center gap-3">
               {t.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={t.avatarUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
+                <img src={t.avatarUrl} alt="" loading="lazy" decoding="async" className="h-10 w-10 rounded-full object-cover" />
               ) : <span className="grid h-10 w-10 place-items-center rounded-full bg-brand text-sm font-bold text-white">{t.name[0]}</span>}
               <span>
                 <span className="block text-sm font-bold">{t.name}</span>

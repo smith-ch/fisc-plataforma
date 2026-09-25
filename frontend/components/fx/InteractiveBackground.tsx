@@ -225,6 +225,11 @@ export function InteractiveBackground({ colors = ['#3E4A52', '#8FA4B0', '#1f2a30
     }
 
     function onMove(e: PointerEvent) {
+      // Evita el costo de layout de getBoundingClientRect() en las 7-8
+      // instancias que suele haber montadas por página cuando la sección no
+      // está en pantalla — sin este corte, cada pointermove del sitio entero
+      // forzaba un reflow por cada fondo interactivo fuera de vista.
+      if (!visible) { mouse.active = false; mouse.px = mouse.py = -9999; return; }
       const rect = wrap.getBoundingClientRect();
       const inside = e.clientY >= rect.top && e.clientY <= rect.bottom;
       if (!inside) { mouse.active = false; mouse.px = mouse.py = -9999; return; }
@@ -256,22 +261,24 @@ export function InteractiveBackground({ colors = ['#3E4A52', '#8FA4B0', '#1f2a30
      * "activa" de sección en sección a medida que se recorre la página.
      */
     function onScroll() {
-      if (reduced) return;
+      // `visible` ya viene de un IntersectionObserver con rootMargin de
+      // sobra (ver más abajo) — evita otro getBoundingClientRect() por
+      // instancia fuera de vista en cada tick de scroll del sitio entero.
+      if (reduced || !visible) { lastScrollY = window.scrollY; return; }
       const sy = window.scrollY;
       const dy = sy - lastScrollY;
       lastScrollY = sy;
       const now = performance.now();
       if (Math.abs(dy) < 4 || now - lastRippleAt < 140) return;
       lastRippleAt = now;
-      const rect = wrap.getBoundingClientRect();
-      // Sólo si la sección está cerca de la pantalla (evita trabajo en secciones lejanas).
-      if (rect.bottom < -200 || rect.top > window.innerHeight + 200) return;
       const power = Math.min(1, Math.abs(dy) / 45);
       ripples.push({ x: w * (0.35 + Math.random() * 0.3), y: dy > 0 ? 0 : h, t0: now, power });
       if (ripples.length > 6) ripples.shift();
     }
 
-    const io = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; });
+    // rootMargin da el mismo margen de "cerca de pantalla" que antes calculaba
+    // onScroll a mano (200px), para no perder la ligera anticipación del efecto.
+    const io = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; }, { rootMargin: '200px' });
     io.observe(wrap);
     const ro = new ResizeObserver(resize);
     ro.observe(wrap);
