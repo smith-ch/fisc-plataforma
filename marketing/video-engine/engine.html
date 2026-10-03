@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=block" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0d10; --text: #eef2f4; --muted: #8a979f; --steel: #8FA4B0; --ice: #cfe3ee; --deep: #3E4A52; --red: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); overflow: hidden; }
+  body { font-family: "Inter", system-ui, sans-serif; color: var(--text); -webkit-font-smoothing: antialiased; }
+  .d { font-family: "Space Grotesk", "Inter", sans-serif; }
+  #stage { position: relative; overflow: hidden; background: var(--bg); }
+  .bg { position: absolute; inset: 0; }
+  .glow { position: absolute; border-radius: 50%; filter: blur(90px); }
+  .dots { position: absolute; inset: -40px; background-image: radial-gradient(rgba(207,227,238,.09) 1.2px, transparent 1.2px); background-size: 34px 34px; }
+  .vig { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.55) 100%); }
+  .scene { position: absolute; inset: 0; will-change: opacity, transform; }
+  .line { position: absolute; left: 0; right: 0; text-align: center; font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-spacing: -0.03em; line-height: 1.04; white-space: pre; }
+  .sub { position: absolute; left: 0; right: 0; text-align: center; color: var(--muted); font-weight: 500; line-height: 1.3; white-space: pre; }
+  .chip { position: absolute; left: 50%; display: inline-flex; align-items: center; gap: 12px; padding: 12px 24px; border-radius: 999px;
+          border: 1px solid rgba(143,164,176,.45); background: rgba(143,164,176,.08); color: var(--ice); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; }
+  .chip i { width: 10px; height: 10px; border-radius: 50%; background: var(--steel); display: inline-block; }
+  .piece { position: absolute; will-change: transform, opacity, filter; }
+  .halo { position: absolute; border-radius: 50%; filter: blur(60px); background: radial-gradient(circle, rgba(207,227,238,.55), rgba(143,164,176,.18) 45%, transparent 70%); }
+  .word { position: absolute; left: 0; right: 0; text-align: center; font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-spacing: .32em; text-indent: .32em; }
+  .tag { position: absolute; left: 0; right: 0; text-align: center; font-weight: 600; letter-spacing: .38em; text-indent: .38em; color: var(--steel); text-transform: uppercase; }
+  .bigletter { position: absolute; left: 0; right: 0; text-align: center; font-family: "Space Grotesk", sans-serif; font-weight: 700; line-height: .8; color: transparent; -webkit-text-stroke: 3px rgba(143,164,176,.35); }
+  .tchip { position: absolute; padding: 14px 26px; border-radius: 14px; border: 1px solid rgba(143,164,176,.4); background: rgba(20,26,31,.85); color: var(--text); font-weight: 600; white-space: nowrap; }
+  .card { position: absolute; border-radius: 28px; border: 1px solid rgba(143,164,176,.3); background: linear-gradient(145deg, rgba(34,42,48,.9), rgba(16,20,24,.9)); overflow: hidden; }
+  .card .k { position: absolute; font-family: "Space Grotesk", sans-serif; font-weight: 700; color: rgba(143,164,176,.9); line-height: 1; }
+  .card .t { position: absolute; font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-spacing: -0.02em; line-height: 1.08; white-space: pre; }
+  .card .d2 { position: absolute; color: var(--muted); font-weight: 500; line-height: 1.3; white-space: pre; }
+  .bar { position: absolute; background: linear-gradient(90deg, var(--steel), transparent); height: 4px; border-radius: 4px; }
+  .cta { position: absolute; left: 50%; padding: 22px 52px; border-radius: 18px; background: #eef2f4; color: #0b0d10; font-family: "Space Grotesk", sans-serif; font-weight: 700; white-space: nowrap; box-shadow: 0 18px 60px rgba(207,227,238,.28); }
+  .url { position: absolute; left: 0; right: 0; text-align: center; color: var(--steel); font-weight: 600; letter-spacing: .04em; }
+  .row { position: absolute; display: flex; align-items: center; gap: 22px; font-weight: 600; white-space: nowrap; }
+  .tick { flex: none; display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--steel); color: var(--ice); background: rgba(143,164,176,.12); font-weight: 700; }
+  em { font-style: normal; }
+  .mono { font-family: "JetBrains Mono", monospace; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eOut = t => 1 - Math.pow(1 - clamp(t), 3);
+const eInOut = t => { t = clamp(t); return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
+const eBack = t => { t = clamp(t); const c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, d) => clamp((t - a) / d);
+const el = (tag, cls, parent, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; parent.appendChild(e); return e; };
+const COLORS = { steel: '#8FA4B0', ice: '#cfe3ee', white: '#ffffff', muted: '#8a979f', red: '#f87171', text: '#eef2f4', deep: '#3E4A52' };
+const col = c => COLORS[c] || c || COLORS.text;
+const rich = s => s.replace(/\[(\w+)\](.*?)\[\/\]/g, (_, c, x) => `<em style="color:${col(c)}">${x}</em>`);
+const BR = '../../frontend/public/brand/';
+
+let SPEC, W, H, built = [];
+const V = () => H > W;
+
+function build(spec) {
+  SPEC = spec; W = spec.W; H = spec.H;
+  const stage = document.getElementById('stage');
+  stage.style.width = W + 'px'; stage.style.height = H + 'px';
+  const bg = el('div', 'bg', stage);
+  const g1 = el('div', 'glow', bg), g2 = el('div', 'glow', bg), dots = el('div', 'dots', bg); el('div', 'vig', bg);
+  Object.assign(g1.style, { width: W * .8 + 'px', height: W * .8 + 'px', background: 'radial-gradient(circle, rgba(143,164,176,.38), transparent 65%)' });
+  Object.assign(g2.style, { width: W * .6 + 'px', height: W * .6 + 'px', background: 'radial-gradient(circle, rgba(62,74,82,.65), transparent 65%)' });
+  built.push({ kind: 'bg', g1, g2, dots });
+  let t0 = 0;
+  for (const sc of spec.scenes) {
+    const root = el('div', 'scene', stage);
+    const S = { sc, root, start: t0, end: t0 + sc.dur };
+    t0 += sc.dur;
+    ({ text: buildText, logo: buildLogo, pillar: buildPillar, cards: buildCards, list: buildList, outro: buildLogo }[sc.type])(S);
+    built.push(S);
+  }
+  spec.total = t0;
+}
+
+function buildText(S) {
+  const { sc, root } = S;
+  if (sc.chip) { const c = el('div', 'chip', root, `<i></i>${sc.chip}`); c.style.fontSize = (V() ? 28 : 24) + 'px'; S.chip = c; }
+  S.lines = (sc.lines || []).map(ln => {
+    const e = el('div', 'line', root, rich(ln.t));
+    e.style.fontSize = (ln.size || (V() ? 110 : 108)) + 'px';
+    e.style.color = col(ln.color || 'text');
+    if (ln.weight) e.style.fontWeight = ln.weight;
+    return { e, ln };
+  });
+  if (sc.sub) { S.sub = el('div', 'sub', root, rich(sc.sub)); S.sub.style.fontSize = (sc.subSize || (V() ? 44 : 38)) + 'px'; }
+}
+
+function buildLogo(S) {
+  const { sc, root } = S;
+  const isOutro = sc.type === 'outro';
+  const h = sc.size || (isOutro ? (sc.cta ? (V() ? 380 : 330) : (V() ? 520 : 440)) : (V() ? 760 : 620));
+  const w = h * 422 / 511;
+  S.lh = h; S.lw = w;
+  S.halo = el('div', 'halo', root);
+  S.pieces = ['piece-f', 'piece-s-top', 'piece-s-mid', 'piece-s-bottom'].map((n, i) => {
+    const img = el('img', 'piece', root); img.src = BR + n + '-white.png'; img.style.width = w + 'px'; img.style.height = h + 'px';
+    return { img, off: [[-90, -60], [70, -110], [-70, 80], [90, 110]][i], at: 0.15 + i * 0.22 };
+  });
+  S.word = el('div', 'word', root, 'F.I.S.C.');
+  S.tag = el('div', 'tag', root, sc.tag || 'Soluciones que impulsan');
+  if (sc.sub) { S.sub = el('div', 'sub', root, rich(sc.sub)); }
+  if (isOutro && sc.cta) { S.cta = el('div', 'cta', root, sc.cta); S.url = el('div', 'url', root, sc.url || ''); }
+}
+
+function buildList(S) {
+  const { sc, root } = S;
+  if (sc.chip) { S.chip = el('div', 'chip', root, `<i></i>${sc.chip}`); S.chip.style.fontSize = (V() ? 28 : 24) + 'px'; }
+  S.lines = (sc.lines || []).map(ln => { const e = el('div', 'line', root, rich(ln.t)); e.style.fontSize = (ln.size || (V() ? 100 : 92)) + 'px'; return { e, ln }; });
+  S.rows = (sc.items || []).map(t => {
+    const r = el('div', 'row', root); const sz = V() ? 50 : 40;
+    const tk = el('div', 'tick', r, '✓'); tk.style.width = tk.style.height = sz * 1.5 + 'px'; tk.style.fontSize = sz * 0.8 + 'px';
+    el('span', '', r, t); r.style.fontSize = sz + 'px'; return r;
+  });
+}
+
+function buildPillar(S) {
+  const { sc, root } = S;
+  S.big = el('div', 'bigletter', root, sc.code);
+  S.chip = el('div', 'chip', root, `<i></i>${sc.kicker}`); S.chip.style.fontSize = (V() ? 28 : 24) + 'px';
+  S.lines = sc.title.map(t => { const e = el('div', 'line', root, rich(t)); e.style.fontSize = (sc.size || (V() ? 104 : 96)) + 'px'; return { e }; });
+  S.sub = el('div', 'sub', root, rich(sc.desc)); S.sub.style.fontSize = (V() ? 42 : 36) + 'px';
+  S.chips = (sc.items || []).map(t => el('div', 'tchip', root, t));
+  S.chips.forEach(c => c.style.fontSize = (V() ? 36 : 30) + 'px');
+}
+
+function buildCards(S) {
+  const { sc, root } = S;
+  S.cards = sc.items.map(it => {
+    const c = el('div', 'card', root);
+    const k = el('div', 'k', c, it.k), t = el('div', 't', c, rich(it.t)), d = el('div', 'd2', c, rich(it.d || ''));
+    return { c, k, t, d };
+  });
+}
+
+function render(t) {
+  for (const S of built) {
+    if (S.kind === 'bg') {
+      const a = t * 0.12;
+      S.g1.style.transform = `translate(${W * .05 + Math.sin(a) * 90}px, ${-H * .22 + Math.cos(a * .8) * 70}px)`;
+      S.g2.style.transform = `translate(${W * .45 + Math.cos(a * .7) * 100}px, ${H * .5 + Math.sin(a) * 80}px)`;
+      S.dots.style.transform = `translateY(${-(t * 6) % 34}px)`;
+      continue;
+    }
+    const lt = t - S.start, dur = S.sc.dur;
+    const visible = t >= S.start - 0.001 && t < S.end + 0.001;
+    S.root.style.display = visible ? 'block' : 'none';
+    if (!visible) continue;
+    const last = S === built[built.length - 1];
+    const inK = S.sc.noIn ? 1 : eOut(prog(lt, 0, 0.4));
+    const outK = last ? 0 : eInOut(prog(lt, dur - 0.3, 0.3));
+    S.root.style.opacity = (inK * (1 - outK)).toFixed(3);
+    S.root.style.transform = `translateY(${(1 - inK) * 26 - outK * 22}px) scale(${1 - (1 - inK) * 0.02})`;
+    ({ text: renderText, logo: renderLogo, outro: renderLogo, pillar: renderPillar, cards: renderCards, list: renderList }[S.sc.type])(S, lt);
+  }
+}
+
+function stackLines(S, lt, sc, defSize, gapK) {
+  const sizes = S.lines.map(l => (l.ln && l.ln.size) || defSize);
+  const gap = sc.gap || gapK || 1.12;
+  return { sizes, gap };
+}
+
+function renderText(S, lt) {
+  const sc = S.sc; const gap = sc.gap || 1.12;
+  const sizes = S.lines.map(l => (l.ln.size || (V() ? 110 : 108)));
+  const subH = S.sub ? (sc.subSize || (V() ? 44 : 38)) * 1.6 + 30 : 0;
+  const blockH = sizes.reduce((a, s) => a + s * gap, 0) + subH;
+  let y = (sc.y != null ? sc.y : H / 2 - blockH / 2) + (S.chip ? 50 : 0);
+  if (S.chip) { const k = eBack(prog(lt, 0.05, 0.5)); S.chip.style.top = (y - 110) + 'px'; S.chip.style.opacity = clamp(k); S.chip.style.transform = `translateX(-50%) scale(${0.85 + 0.15 * k})`; }
+  S.lines.forEach((l, i) => {
+    const st = (l.ln.at != null ? l.ln.at : 0.12 + i * (sc.stagger || 0.18));
+    const k = eOut(prog(lt, st, 0.55));
+    l.e.style.top = y + 'px'; l.e.style.opacity = k.toFixed(3);
+    l.e.style.transform = `translateY(${(1 - k) * 46}px)`; l.e.style.filter = `blur(${(1 - k) * 10}px)`;
+    if (l.ln.strike != null) {
+      const sk = eInOut(prog(lt, l.ln.strike, 0.35));
+      l.e.style.textDecoration = sk > 0.02 ? 'line-through' : 'none'; l.e.style.textDecorationColor = COLORS.red; l.e.style.textDecorationThickness = '8px';
+      l.e.style.opacity = (k * (1 - 0.55 * sk)).toFixed(3);
+    }
+    y += sizes[i] * gap;
+  });
+  if (S.sub) { const at = sc.subAt != null ? sc.subAt : 0.3 + S.lines.length * (sc.stagger || 0.18); const k = eOut(prog(lt, at, 0.6)); S.sub.style.top = y + 24 + 'px'; S.sub.style.opacity = k; S.sub.style.transform = `translateY(${(1 - k) * 24}px)`; }
+}
+
+function renderLogo(S, lt) {
+  const sc = S.sc, h = S.lh, w = S.lw, isOutro = sc.type === 'outro';
+  const cx = W / 2;
+  const top = sc.y != null ? sc.y : (isOutro ? (V() ? H / 2 - 520 : H / 2 - 330) : (V() ? H / 2 - 620 : H / 2 - 400));
+  const settled = 0.15 + 3 * 0.22 + 0.6;
+  S.pieces.forEach((p, i) => {
+    const k = eOut(prog(lt, p.at, 0.7));
+    const float = Math.sin(lt * 1.3 + i) * 3 * prog(lt, settled, 0.5);
+    p.img.style.left = cx - w / 2 + (1 - k) * p.off[0] + 'px';
+    p.img.style.top = top + (1 - k) * p.off[1] + float + 'px';
+    p.img.style.opacity = k.toFixed(3);
+    p.img.style.filter = `blur(${(1 - k) * 16}px)`;
+  });
+  const flash = Math.sin(Math.PI * prog(lt, settled - 0.2, 1.0));
+  const hs = h * 1.5;
+  Object.assign(S.halo.style, { width: hs + 'px', height: hs + 'px', left: cx - hs / 2 + 'px', top: top + h / 2 - hs / 2 + 'px', opacity: (0.25 + 0.55 * flash).toFixed(3) });
+  const wk = eOut(prog(lt, settled - 0.1, 0.6)), tk = eOut(prog(lt, settled + 0.25, 0.6));
+  const wsize = (isOutro ? 1 : 1) * (V() ? 112 : 92);
+  Object.assign(S.word.style, { top: top + h + 30 + 'px', fontSize: wsize + 'px', opacity: wk, transform: `translateY(${(1 - wk) * 24}px)` });
+  Object.assign(S.tag.style, { top: top + h + 30 + wsize * 1.25 + 'px', fontSize: (V() ? 30 : 26) + 'px', opacity: tk, transform: `translateY(${(1 - tk) * 18}px)` });
+  if (S.sub) { const sk = eOut(prog(lt, settled + 0.7, 0.6)); S.sub.style.fontSize = (V() ? 40 : 34) + 'px'; S.sub.style.top = top + h + 30 + wsize * 1.25 + (V() ? 110 : 90) + 'px'; S.sub.style.opacity = sk; }
+  if (S.cta) {
+    const ck = eBack(prog(lt, settled + 1.2, 0.5)), uk = eOut(prog(lt, settled + 1.6, 0.5));
+    const base = top + h + 30 + wsize * 1.25 + (V() ? 110 : 90) + (V() ? 80 : 62);
+    const cs = V() ? 44 : 36;
+    Object.assign(S.cta.style, { top: base + 'px', fontSize: cs + 'px', opacity: clamp(ck), transform: `translateX(-50%) scale(${0.85 + 0.15 * clamp(ck)})`, boxShadow: `0 18px 60px rgba(207,227,238,${0.2 + 0.2 * Math.max(0, Math.sin((lt - settled - 2) * 2.4)) * prog(lt, settled + 2, 0.2)})` });
+    Object.assign(S.url.style, { top: base + cs * 3.1 + 'px', fontSize: (V() ? 34 : 28) + 'px', opacity: uk });
+  }
+}
+
+function renderList(S, lt) {
+  const sc = S.sc; const sizes = S.lines.map(l => l.ln.size || (V() ? 100 : 92));
+  const rowH = (V() ? 50 : 40) * 2.2; const maxW = Math.max(...S.rows.map(r => r.offsetWidth));
+  const blockH = sizes.reduce((a, z) => a + z * 1.1, 0) + 50 + S.rows.length * rowH;
+  let y = (sc.y != null ? sc.y : H / 2 - blockH / 2) + (S.chip ? 50 : 0);
+  if (S.chip) { const k = eBack(prog(lt, 0.05, 0.5)); S.chip.style.top = (y - 110) + 'px'; S.chip.style.opacity = clamp(k); S.chip.style.transform = `translateX(-50%) scale(${0.85 + 0.15 * k})`; }
+  S.lines.forEach((l, i) => { const k = eOut(prog(lt, 0.12 + i * 0.18, 0.55)); l.e.style.top = y + 'px'; l.e.style.opacity = k; l.e.style.transform = `translateY(${(1 - k) * 40}px)`; l.e.style.filter = `blur(${(1 - k) * 9}px)`; y += sizes[i] * 1.1; });
+  y += 50;
+  const at = sc.itemsAt != null ? sc.itemsAt : 0.6 + S.lines.length * 0.18;
+  S.rows.forEach((r, i) => { const k = eOut(prog(lt, at + i * 0.32, 0.5)); Object.assign(r.style, { left: (W - maxW) / 2 + 'px', top: y + i * rowH + (1 - k) * 26 + 'px', opacity: k }); });
+}
+
+function renderPillar(S, lt) {
+  const sc = S.sc;
+  const bigS = V() ? W * 1.15 : H * 1.1;
+  const kb = eOut(prog(lt, 0, 0.9));
+  Object.assign(S.big.style, { fontSize: bigS + 'px', top: (V() ? H * 0.16 : H * 0.05) + 'px', opacity: (0.9 * kb).toFixed(3), transform: `scale(${1.08 - 0.08 * kb})` });
+  S.big.style.webkitTextStroke = `3px rgba(143,164,176,${0.25 + 0.15 * Math.sin(lt * 1.4)})`;
+  let y = V() ? H * 0.34 : H * 0.17;
+  const kk = eBack(prog(lt, 0.1, 0.5));
+  S.chip.style.top = y + 'px'; S.chip.style.opacity = clamp(kk); S.chip.style.transform = `translateX(-50%) scale(${0.85 + 0.15 * kk})`;
+  y += 100;
+  S.lines.forEach((l, i) => {
+    const k = eOut(prog(lt, 0.3 + i * 0.18, 0.55)); const sz = parseFloat(l.e.style.fontSize);
+    l.e.style.top = y + 'px'; l.e.style.opacity = k; l.e.style.transform = `translateY(${(1 - k) * 40}px)`; l.e.style.filter = `blur(${(1 - k) * 9}px)`;
+    y += sz * 1.1;
+  });
+  const dk = eOut(prog(lt, 0.3 + S.lines.length * 0.18 + 0.1, 0.6));
+  S.sub.style.top = y + 20 + 'px'; S.sub.style.opacity = dk; S.sub.style.transform = `translateY(${(1 - dk) * 20}px)`;
+  y += (V() ? 150 : 130) + (sc.desc.split('\n').length - 1) * 20;
+  // service chips, flowed in rows
+  const maxW = V() ? W * 0.9 : W * 0.78; const gapx = 16, gapy = 16;
+  const rows = []; let row = [], rw = 0;
+  S.chips.forEach(c => { const cw = c.offsetWidth; if (rw + cw > maxW && row.length) { rows.push({ row, rw: rw - gapx }); row = []; rw = 0; } row.push(c); rw += cw + gapx; });
+  if (row.length) rows.push({ row, rw: rw - gapx });
+  let idx = 0; const rowH = (V() ? 36 : 30) * 2.1;
+  rows.forEach((r, ri) => {
+    let x = (W - r.rw) / 2;
+    r.row.forEach(c => {
+      const k = eBack(prog(lt, sc.itemsAt + idx * 0.28, 0.5)); idx++;
+      Object.assign(c.style, { left: x + 'px', top: y + ri * (rowH + gapy) + (1 - clamp(k)) * 30 + 'px', opacity: clamp(k), transform: `scale(${0.9 + 0.1 * clamp(k)})` });
+      x += c.offsetWidth + gapx;
+    });
+  });
+}
+
+function renderCards(S, lt) {
+  const sc = S.sc; const n = S.cards.length;
+  if (V()) {
+    const cw = W * 0.86, ch = Math.min(420, (H * 0.7) / n - 24), gap = 28;
+    const total = n * ch + (n - 1) * gap; let y = (sc.y != null ? sc.y : H / 2 - total / 2);
+    S.cards.forEach((c, i) => {
+      const k = eOut(prog(lt, 0.2 + i * 0.5, 0.6));
+      Object.assign(c.c.style, { left: (W - cw) / 2 + 'px', top: y + i * (ch + gap) + (1 - k) * 60 + 'px', width: cw + 'px', height: ch + 'px', opacity: k });
+      Object.assign(c.k.style, { left: '40px', top: ch / 2 - 60 + 'px', fontSize: '120px' });
+      Object.assign(c.t.style, { left: '200px', top: ch / 2 - 74 + 'px', fontSize: '46px' });
+      Object.assign(c.d.style, { left: '200px', top: ch / 2 + 6 + 'px', fontSize: '32px' });
+    });
+  } else {
+    const gap = 36, cw = (W * 0.88 - gap * (n - 1)) / n, ch = 560; const x0 = (W - (n * cw + (n - 1) * gap)) / 2; const y = sc.y != null ? sc.y : H / 2 - ch / 2;
+    S.cards.forEach((c, i) => {
+      const k = eOut(prog(lt, 0.2 + i * 0.5, 0.6));
+      Object.assign(c.c.style, { left: x0 + i * (cw + gap) + 'px', top: y + (1 - k) * 60 + 'px', width: cw + 'px', height: ch + 'px', opacity: k });
+      Object.assign(c.k.style, { left: '40px', top: '30px', fontSize: '150px' });
+      Object.assign(c.t.style, { left: '40px', top: '250px', fontSize: '35px' });
+      Object.assign(c.d.style, { left: '40px', top: '400px', fontSize: '28px' });
+    });
+  }
+}
+
+window.__ready = (async () => {
+  const spec = window.__SPEC;
+  build(spec);
+  await document.fonts.ready;
+  await Promise.all([...document.images].map(i => i.complete ? 1 : new Promise(r => { i.onload = r; i.onerror = r; })));
+  render(0);
+  return spec.total;
+})();
+window.render = render;
+</script>
+</body>
+</html>

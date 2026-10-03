@@ -1,0 +1,73 @@
+// 15 commercial videos for F.I.S.C. — aimed at winning clients: a hook (a real problem), the service in
+// its own words (seed catalog / FAQ), and a call to action. No invented prices, deadlines or promos.
+// Change CONTACT once and re-render to point every video at a new site / WhatsApp.
+const CONTACT = { cta: 'Solicita tu levantamiento', url: 'fisc-frontend.vercel.app/solicitar' };
+const L = { W: 1920, H: 1080 }, V = { W: 1080, H: 1920 }, Q = { W: 1080, H: 1080 };
+const outro = (sub, dur = 6.8) => ({ type: 'outro', dur, tag: 'Soluciones que impulsan', sub, cta: CONTACT.cta, url: CONTACT.url });
+const hook = (lines, dur = 3.0, chip) => ({ type: 'text', dur, chip, lines });
+const list = (lines, items, dur = 5.6, chip) => ({ type: 'list', dur, chip, lines, items });
+
+const vids = [
+  { id: 'c01-levantamiento', ...V, tone: 'default', key: 5, bpm: 110, title: 'Empieza por el levantamiento', angle: 'Primer paso del cliente: el levantamiento.',
+    share: '¿Vas a remodelar o arreglar algo? Empieza por el levantamiento: visita presencial o virtual, cotización unificada y un solo plazo. F.I.S.C. — Soluciones que impulsan.',
+    scenes: [hook([{ t: '¿Vas a', size: 120 }, { t: 'remodelar?', size: 120 }, { t: '[steel]Empieza aquí.[/]', size: 110 }]),
+      list([{ t: 'El levantamiento', size: 92 }], ['Visita o evaluación virtual', 'Un supervisor mide tu espacio', 'Cotización unificada', 'Un monto y un solo plazo']), outro('Adecuación · Mantenimiento · Tecnología')] },
+  { id: 'c02-pintura', ...V, tone: 'app-store', key: 7, bpm: 114, title: 'Pintura interior y exterior', angle: 'Servicio de pintura con preparación completa.',
+    share: '¿Paredes cansadas? Pintura interior y exterior con preparación de superficies, masillado, protección de muebles y limpieza final. Solicita tu levantamiento con F.I.S.C.',
+    scenes: [hook([{ t: '¿Paredes', size: 124 }, { t: '[steel]cansadas?[/]', size: 124 }]),
+      list([{ t: 'Pintura interior', size: 92 }, { t: 'y exterior', size: 92 }], ['Preparación y lijado', 'Masillado y grietas', 'Protección de muebles y pisos', 'Limpieza final del área']), outro('Pintura · Adecuación de espacios')] },
+  { id: 'c03-plomeria', ...Q, tone: 'default', key: 2, bpm: 108, title: 'Plomería', angle: 'Filtraciones, griferías, sanitarios y tuberías.',
+    share: '¿Una filtración que no encuentras? Detección de filtraciones, griferías, sanitarios y mantenimiento de tuberías. F.I.S.C.',
+    scenes: [hook([{ t: '¿Una filtración', size: 90 }, { t: '[steel]que no encuentras?[/]', size: 82 }]),
+      list([{ t: 'Plomería', size: 96 }], ['Detección de filtraciones', 'Instalación de griferías', 'Instalación de sanitarios', 'Mantenimiento de tuberías']), outro('Mantenimiento Estructural y Operativo')] },
+  { id: 'c04-impermeabilizacion', ...V, tone: 'cinematic', key: 4, bpm: 96, title: 'Impermeabilización', angle: 'Goteras en techos y paredes.',
+    share: '¿Goteras en el techo? Impermeabilización de techos y paredes: evaluación por metro cuadrado, preparación, membrana y garantía del trabajo. F.I.S.C.',
+    scenes: [hook([{ t: '¿Goteras', size: 130 }, { t: '[steel]en el techo?[/]', size: 112 }]),
+      list([{ t: 'Impermeabilización', size: 82 }], ['Evaluación por metro cuadrado', 'Limpieza y preparación', 'Membrana impermeabilizante', 'Garantía del trabajo']), outro('Techos y paredes protegidos')] },
+  { id: 'c05-muebles-a-la-medida', ...L, tone: 'polished', key: 0, bpm: 100, title: 'Muebles a la medida', angle: 'Melamina a la medida para hogar y negocio.',
+    share: 'Muebles a la medida en melamina: escritorios, exhibidores, closets y módulos de recepción. Diseñamos, fabricamos e instalamos. F.I.S.C.',
+    scenes: [hook([{ t: 'Muebles', size: 140 }, { t: '[steel]a tu medida.[/]', size: 140 }]),
+      list([{ t: 'Melamina a la medida', size: 96 }], ['Escritorios y exhibidores', 'Closets', 'Módulos de recepción', 'Nivelación y anclaje seguro']), outro('Instalación y amueblamiento')] },
+  { id: 'c06-cerrajeria', ...Q, tone: 'default', key: 9, bpm: 112, title: 'Cerrajería', angle: 'Cambio e instalación de cerraduras.',
+    share: '¿Necesitas cambiar una cerradura? Cambio, instalación de cerrojos, reparaciones y seguridad básica para hogares y comercios. F.I.S.C.',
+    scenes: [hook([{ t: '¿Cambio de', size: 100 }, { t: '[steel]cerradura?[/]', size: 100 }]),
+      list([{ t: 'Cerrajería', size: 96 }], ['Cambio de cerraduras', 'Instalación de cerrojos', 'Reparaciones', 'Seguridad básica']), outro('Hogares y comercios')] },
+  { id: 'c07-sistemas-pos', ...L, tone: 'app-store', key: 6, bpm: 116, title: 'Sistemas POS', angle: 'Punto de venta con facturación fiscal.',
+    share: '¿Tu negocio sigue facturando a mano? Sistemas POS con facturación fiscal, inventario, contabilidad y capacitación para tu equipo. F.I.S.C.',
+    scenes: [hook([{ t: '¿Tu negocio sigue', size: 112 }, { t: '[steel]facturando a mano?[/]', size: 112 }]),
+      list([{ t: 'Sistemas POS', size: 96 }], ['Facturación con comprobantes fiscales', 'Inventario y contabilidad', 'Configuración a la medida', 'Capacitación del personal']), outro('Tecnología y Sistemas Comerciales')] },
+  { id: 'c08-limpieza-post-obra', ...V, tone: 'default', key: 1, bpm: 106, title: 'Limpieza post-obra', angle: 'Después de la obra, todo en orden.',
+    share: '¿Terminó la obra y quedó el polvo? Limpieza post-obra, limpieza general y programas de mantenimiento preventivo. F.I.S.C.',
+    scenes: [hook([{ t: '¿Terminó', size: 120 }, { t: 'la obra y', size: 120 }, { t: '[steel]quedó el polvo?[/]', size: 96 }]),
+      list([{ t: 'Limpieza y', size: 96 }, { t: 'mantenimiento', size: 96 }], ['Limpieza post-obra', 'Limpieza general', 'Mantenimiento preventivo', 'Inspecciones periódicas']), outro('Propiedades en estado óptimo')] },
+  { id: 'c09-varios-servicios', ...L, tone: 'default', key: 8, bpm: 110, title: 'Una sola orden', angle: 'Varios servicios en una sola orden.',
+    share: '¿Varios trabajos pendientes? Pídelos en una sola orden: un único levantamiento, una cotización unificada y un tiempo de entrega único. F.I.S.C.',
+    scenes: [hook([{ t: '¿Varios trabajos', size: 124 }, { t: '[steel]pendientes?[/]', size: 124 }]),
+      list([{ t: 'Una sola orden', size: 96 }], ['Elige todos los servicios', 'Un único levantamiento', 'Una cotización unificada', 'Un tiempo de entrega único']), outro('Un solo equipo para todo')] },
+  { id: 'c10-sigue-tu-proyecto', ...V, tone: 'app-store', key: 3, bpm: 114, title: 'Sigue tu proyecto', angle: 'Estado de la orden y reportes diarios con fotos.',
+    share: '¿Cómo va mi proyecto? Con F.I.S.C. ves el estado de tu orden y recibes reportes diarios con fotos del avance, sin tener que estar en el lugar.',
+    scenes: [hook([{ t: '¿Cómo va', size: 124 }, { t: '[steel]mi proyecto?[/]', size: 112 }]),
+      list([{ t: 'Tú lo ves', size: 100 }], ['Estado de tu orden', 'Reportes diarios', 'Fotos del avance', 'Sin estar en el lugar']), outro('Tu proyecto, a la vista')] },
+  { id: 'c11-para-negocios', ...L, tone: 'polished', key: 10, bpm: 102, title: 'Para tu local o negocio', angle: 'Adecuación, mantenimiento y tecnología para comercios.',
+    share: 'Para tu local o negocio: adecuación y acabados, mantenimiento, sistemas POS y equipos en orden. Todo con un solo equipo. F.I.S.C.',
+    scenes: [hook([{ t: 'Para tu local', size: 140 }, { t: '[steel]o negocio.[/]', size: 140 }]),
+      list([{ t: 'Un solo equipo', size: 96 }], ['Adecuación y decoración', 'Mantenimiento preventivo', 'Sistemas POS', 'Equipos y redes en orden']), outro('Adecuación · Mantenimiento · Tecnología')] },
+  { id: 'c12-pagas-satisfecho', ...Q, tone: 'app-store', key: 8, bpm: 116, title: 'Pagas cuando estás satisfecho', angle: 'Confianza: trabajo primero, pago después.',
+    share: 'Pagas cuando estás satisfecho. Cotización transparente, reportes con fotos, pago por transferencia y factura con comprobante fiscal. F.I.S.C.',
+    scenes: [hook([{ t: 'Pagas cuando', size: 104 }, { t: '[steel]estás satisfecho.[/]', size: 92 }]),
+      list([{ t: 'Así de claro', size: 96 }], ['Cotización transparente', 'Reportes con fotos', 'Pagas por transferencia', 'Factura con comprobante']), outro('Trabajo primero, confianza siempre')] },
+  { id: 'c13-cortinas-y-accesorios', ...V, tone: 'default', key: 11, bpm: 108, title: 'Cortinas y accesorios', angle: 'Instalación limpia de cortinas, persianas y soportes.',
+    share: '¿Cortinas, persianas o soporte de TV? Instalación limpia y precisa, con el anclaje correcto según tu pared. F.I.S.C.',
+    scenes: [hook([{ t: '¿Cortinas,', size: 124 }, { t: 'persianas', size: 124 }, { t: '[steel]o tu TV?[/]', size: 124 }]),
+      list([{ t: 'Instalación', size: 96 }, { t: 'limpia y precisa', size: 84 }], ['Persianas y cortinas', 'Soportes de TV', 'Repisas y cuadros', 'Anclajes según tu pared']), outro('Decoración y acabados')] },
+  { id: 'c14-equipos-electronicos', ...Q, tone: 'polished', key: 2, bpm: 100, title: 'Equipos electrónicos', angle: 'Diagnóstico y reparación de equipos comerciales.',
+    share: '¿Tu equipo se trabó? Diagnóstico de hardware, limpieza preventiva, reparación y redes, en tu local o en nuestro taller. F.I.S.C.',
+    scenes: [hook([{ t: '¿Tu equipo', size: 108 }, { t: '[steel]se trabó?[/]', size: 108 }]),
+      list([{ t: 'Equipos electrónicos', size: 80 }], ['Diagnóstico de hardware', 'Limpieza preventiva', 'Reparación correctiva', 'Redes y terminales']), outro('En tu local o en nuestro taller')] },
+  { id: 'c15-todo-en-uno', ...V, tone: 'cinematic', key: 0, bpm: 98, title: 'Todo en uno', angle: 'Resumen comercial de los tres pilares.',
+    share: 'Pintura, plomería, mobiliario, impermeabilización, cerrajería y sistemas POS: un solo equipo. Solicita tu levantamiento con F.I.S.C.',
+    scenes: [{ type: 'text', dur: 3.2, chip: 'F.I.S.C.', lines: [{ t: 'Pintura.', size: 112 }, { t: 'Plomería.', size: 112 }, { t: 'Sistemas POS.', size: 112 }] },
+      list([{ t: 'Un solo equipo', size: 100 }], ['Adecuación y estética', 'Mantenimiento estructural', 'Tecnología comercial', 'Un levantamiento, una cotización'], 5.8), outro('Soluciones para tu espacio')] },
+];
+vids.forEach((v) => { const t = v.scenes.reduce((a, s) => a + s.dur, 0); v.poster = +(t - 1.0).toFixed(2); });
+module.exports = vids;
