@@ -1,0 +1,78 @@
+# Despliegue a producción (Vercel). Es el ÚNICO camino a producción:
+# la integración Git de Vercel está desconectada, así que un push a main no publica nada.
+#
+# Quién puede desplegar: solo @smith-ch. Hay dos candados:
+#  1. El job `autorizar` rechaza cualquier actor distinto del dueño.
+#  2. El environment `Production` (donde viven VERCEL_TOKEN y los IDs) exige la
+#     aprobación de @smith-ch y solo acepta la rama main. Aunque alguien edite este
+#     archivo para quitar el paso 1, sin esa aprobación no obtiene el token.
+name: Deploy producción
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  OWNER: smith-ch
+
+jobs:
+  autorizar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Solo el dueño, solo desde main
+        run: |
+          if [ "$GITHUB_ACTOR" != "$OWNER" ] || [ "$GITHUB_TRIGGERING_ACTOR" != "$OWNER" ]; then
+            echo "::error::Solo @$OWNER puede desplegar a producción (lanzado por @$GITHUB_TRIGGERING_ACTOR)."
+            exit 1
+          fi
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Producción solo se despliega desde main (recibido: $GITHUB_REF)."
+            exit 1
+          fi
+
+  frontend:
+    needs: autorizar
+    runs-on: ubuntu-latest
+    environment:
+      name: Production
+      url: ${{ steps.deploy.outputs.url }}
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      # Solo frontend/: evita descargar los ~130 MB de marketing/videos en cada despliegue.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: frontend
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar Vercel CLI
+        run: npm install --global vercel@64.2.0
+
+      - name: Traer configuración de producción
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Publicar
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Publicado en $url" >> "$GITHUB_STEP_SUMMARY"
