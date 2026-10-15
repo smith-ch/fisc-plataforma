@@ -1,6 +1,11 @@
 import type { NextConfig } from 'next';
 
-const API = process.env.API_URL || 'http://localhost:4000';
+const API_DEFAULT = 'http://localhost:4000';
+const API_ENV = process.env.API_URL?.trim();
+const API =
+  API_ENV && API_ENV !== '[SENSITIVE]' && /^https?:\/\//.test(API_ENV)
+    ? API_ENV.replace(/\/$/, '')
+    : API_DEFAULT;
 
 const nextConfig: NextConfig = {
   // El frontend actúa como proxy del API y de los archivos subidos: evita CORS
