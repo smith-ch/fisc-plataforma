@@ -51,28 +51,22 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
       # Solo frontend/: evita descargar los ~130 MB de marketing/videos en cada despliegue.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           sparse-checkout: frontend
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
 
       - name: Instalar Vercel CLI
         run: npm install --global vercel@64.2.0
 
-      - name: Traer configuración de producción
-        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-
-      - name: Build
-        run: vercel build --prod --token="$VERCEL_TOKEN"
-
-      - name: Publicar
+      # El build corre en Vercel (no aquí): las variables de tipo Secret, como API_URL,
+      # solo se descifran en los servidores de Vercel y `vercel pull` no las trae.
+      - name: Build y publicar en Vercel
         id: deploy
         run: |
-          url=$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          url=$(vercel deploy --prod --yes --token="$VERCEL_TOKEN")
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Publicado en $url" >> "$GITHUB_STEP_SUMMARY"
