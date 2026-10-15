@@ -1,0 +1,3 @@
+# Cambios al flujo de despliegue y a la configuración de GitHub requieren revisión del dueño
+# (se hace obligatorio al activar "Require review from Code Owners" en la protección de main).
+/.github/ @smith-ch

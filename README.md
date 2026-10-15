@@ -53,3 +53,12 @@ Con `CONCREBILL_ENABLED=false` funciona en **modo simulado** y cada llamada qued
 ## PayPal
 
 Pendiente. La estructura está en `backend/src/payments/paypal.controller.ts` (crear orden → capturar → registrar pago en Concrebill) y el portal ya muestra la opción "Tarjeta / PayPal — próximamente".
+
+## Despliegue
+
+Producción se publica **solo** con el workflow [Deploy producción](.github/workflows/deploy.yml) y **solo @smith-ch** puede lanzarlo:
+
+1. GitHub → **Actions → Deploy producción → Run workflow** (rama `main`).
+2. Aprueba el despliegue cuando GitHub lo pida (environment `Production`).
+
+Un push a `main` ya **no** despliega: la integración Git de Vercel está desconectada. El token de Vercel vive como secreto del environment `Production`, que exige la aprobación del dueño y solo acepta `main`, así que ningún colaborador puede usarlo aunque edite el workflow.
