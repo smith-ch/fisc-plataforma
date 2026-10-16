@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "fisc-agentes": {
+      "source": {
+        "source": "github",
+        "repo": "smith-ch/fisc-agentes"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "fisc@fisc-agentes": true
+  }
+}
