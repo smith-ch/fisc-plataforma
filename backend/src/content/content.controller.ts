@@ -1,4 +1,5 @@
 import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Put, Query } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsBoolean, IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { Repository } from 'typeorm';
@@ -48,7 +49,7 @@ export class ContentController {
     return { settings, testimonials: [...testimonials, ...fromReviews], faqs, projects };
   }
 
-  @Public() @Post('leads')
+  @Public() @Throttle({ default: { limit: 5, ttl: 600_000 } }) @Post('leads')
   async createLead(@Body() dto: LeadDto) {
     await this.leads.save(this.leads.create(dto));
     return { ok: true };

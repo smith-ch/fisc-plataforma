@@ -9,6 +9,9 @@ process.env.JWT_SECRET = 'secreto-e2e';
 process.env.ADMIN_EMAIL = 'admin-e2e@test.local';
 process.env.ADMIN_PASSWORD = 'Admin-e2e-123';
 process.env.CONCREBILL_ENABLED = 'false';
+// El límite de peticiones se apaga salvo en las pruebas que lo ejercitan; el bloqueo de login se acorta para poder probarlo.
+process.env.THROTTLE_DISABLED = 'true';
+process.env.LOGIN_MAX_FAILURES = '3';
 delete process.env.REVALIDATE_SECRET;
 delete process.env.DB_TYPE;
 delete process.env.DATABASE_URL;

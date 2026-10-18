@@ -2,6 +2,7 @@ import {
   Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UploadedFile, UploadedFiles, UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
 import { AuthUser, CurrentUser } from '../common/current-user.decorator';
 import { PhotoStage, Role } from '../common/enums';
 import { Public, Roles } from '../common/roles.decorator';
@@ -17,12 +18,13 @@ import { OrdersService } from './orders.service';
 export class OrdersController {
   constructor(private readonly orders: OrdersService) {}
 
-  @Public() @Post('orders')
+  @Public() @Throttle({ default: { limit: 10, ttl: 600_000 } }) @Post('orders')
   create(@Body() dto: CreateOrderDto, @CurrentUser() user?: AuthUser) {
     return this.orders.create(dto, user);
   }
 
-  @Public() @Get('orders/track')
+  // Códigos secuenciales (ORD-000001): el límite frena la enumeración.
+  @Public() @Throttle({ default: { limit: 10, ttl: 60_000 } }) @Get('orders/track')
   track(@Query('code') code: string, @Query('email') email: string) {
     return this.orders.track(code, email);
   }

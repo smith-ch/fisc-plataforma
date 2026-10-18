@@ -6,6 +6,7 @@ import { IsNull, Repository } from 'typeorm';
 import { Role } from '../common/enums';
 import { ConcrebillService } from '../concrebill/concrebill.service';
 import { Order, User } from '../entities';
+import { LoginAttempts } from './login-attempts';
 import { LoginDto, RegisterDto, UpdateProfileDto } from './auth.dto';
 
 /** Sesión recién emitida: el JWT (que el controlador pone en una cookie httpOnly), su vencimiento y el usuario. */
@@ -22,6 +23,7 @@ export class AuthService {
     @InjectRepository(Order) private readonly orders: Repository<Order>,
     private readonly jwt: JwtService,
     private readonly concrebill: ConcrebillService,
+    private readonly attempts: LoginAttempts,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -45,14 +47,17 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
+    this.attempts.assertAllowed(dto.email);
     const user = await this.users
       .createQueryBuilder('u')
       .addSelect('u.passwordHash')
       .where('u.email = :email', { email: dto.email.toLowerCase().trim() })
       .getOne();
     if (!user || !(await bcrypt.compare(dto.password, user.passwordHash))) {
+      this.attempts.recordFailure(dto.email);
       throw new UnauthorizedException('Correo o contraseña incorrectos');
     }
+    this.attempts.recordSuccess(dto.email);
     if (!user.active) throw new UnauthorizedException('Tu cuenta está desactivada');
     return this.session(user);
   }
