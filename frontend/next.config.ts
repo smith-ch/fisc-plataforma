@@ -8,6 +8,7 @@ const API =
     : API_DEFAULT;
 
 const nextConfig: NextConfig = {
+  images: { formats: ['image/avif', 'image/webp'] },
   // El frontend actúa como proxy del API y de los archivos subidos: evita CORS
   // y permite desplegar ambos detrás de un mismo dominio.
   async rewrites() {
