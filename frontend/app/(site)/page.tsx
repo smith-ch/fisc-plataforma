@@ -1,14 +1,17 @@
 import { About } from '@/components/landing/About';
-import { Contact } from '@/components/landing/Contact';
-import { FaqSection } from '@/components/landing/FaqSection';
 import { Hero } from '@/components/landing/Hero';
 import { Marquee } from '@/components/landing/Marquee';
 import { Pillars } from '@/components/landing/Pillars';
-import { Process } from '@/components/landing/Process';
-import { Projects } from '@/components/landing/Projects';
-import { Testimonials } from '@/components/landing/Testimonials';
+import dynamic from 'next/dynamic';
 import { getCatalog, getContent } from '@/lib/server';
 
+
+// Secciones bajo el pliegue: su JavaScript se descarga aparte (el HTML sigue llegando renderizado).
+const Process = dynamic(() => import('@/components/landing/Process').then((m) => m.Process));
+const Projects = dynamic(() => import('@/components/landing/Projects').then((m) => m.Projects));
+const Testimonials = dynamic(() => import('@/components/landing/Testimonials').then((m) => m.Testimonials));
+const FaqSection = dynamic(() => import('@/components/landing/FaqSection').then((m) => m.FaqSection));
+const Contact = dynamic(() => import('@/components/landing/Contact').then((m) => m.Contact));
 
 export default async function Home() {
   const [{ settings, testimonials, faqs, projects }, pillars] = await Promise.all([getContent(), getCatalog()]);

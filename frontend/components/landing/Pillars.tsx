@@ -1,11 +1,8 @@
-'use client';
-
-import { motion, useScroll, useTransform } from 'motion/react';
 import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
-import { useRef } from 'react';
 import { ServiceIcon } from '@/components/Icon';
 import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
+import { PillarCard } from '@/components/fx/PillarCard';
 import { Reveal, SpotlightCard } from '@/components/fx/effects';
 import { AddToCart } from '@/components/site/AddToCart';
 import type { Pillar } from '@/lib/types';
@@ -34,27 +31,19 @@ export function Pillars({ pillars }: { pillars: Pillar[] }) {
 }
 
 function PillarScene({ pillar, index }: { pillar: Pillar; index: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
-  const letterY = useTransform(scrollYProgress, [0, 1], ['30%', '-30%']);
-  const rotate = useTransform(scrollYProgress, [0, 1], [-8, 8]);
   const color = pillar.color || '#3E4A52';
 
   return (
-    <div ref={ref} className="relative border-t border-ink-900/10">
+    <div className="relative border-t border-ink-900/10">
       <div className="container-x grid gap-10 py-20 lg:grid-cols-12">
         <div className="lg:col-span-5">
           <div className="lg:sticky lg:top-28">
-            <div className="relative h-56 overflow-hidden rounded-3xl p-8 text-white sm:h-72" style={{ background: `linear-gradient(135deg, ${color}, #07100f)` }}>
-              <motion.span style={{ y: letterY, rotate }} className="pointer-events-none absolute -top-10 -right-6 font-display text-[16rem] leading-none text-white/10">
-                {pillar.code}
-              </motion.span>
-              <div className="absolute inset-0 opacity-40" style={{ background: `radial-gradient(circle at 20% 110%, ${color}, transparent 60%)` }} />
+            <PillarCard code={pillar.code} color={color}>
               <span className="relative grid h-14 w-14 place-items-center rounded-2xl bg-white/15 backdrop-blur">
                 <ServiceIcon name={pillar.icon} className="h-7 w-7" />
               </span>
               <p className="relative mt-auto pt-10 eyebrow text-white/70">Pilar {pillar.code} · {String(index + 1).padStart(2, '0')}</p>
-            </div>
+            </PillarCard>
             <h3 className="mt-8 text-3xl font-bold tracking-tight sm:text-4xl">{pillar.title}</h3>
             <p className="mt-3 max-w-md text-ink-900/60">{pillar.description}</p>
           </div>
