@@ -56,7 +56,7 @@ export interface Settings {
   about: { title: string; text: string; stats: { value: string; label: string }[] };
   process: { title: string; subtitle: string; phases: { title: string; steps: string[] }[] };
   contact: { whatsapp: string; whatsappMessage: string; phone: string; email: string; address: string; hours: string; instagram: string; facebook: string };
-  payments: { currency: string; transferInstructions: string; bankAccounts: { bank: string; type: string; number: string; holder: string; rnc: string }[]; paypalEnabled: boolean };
+  payments?: { currency: string; transferInstructions: string; bankAccounts: { bank: string; type: string; number: string; holder: string; rnc: string }[]; paypalEnabled: boolean };
   seo: { title: string; description: string };
 }
 

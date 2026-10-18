@@ -1,50 +1,45 @@
-# F.I.S.C. — Plataforma de servicios
+# F.I.S.C. — Landing y tienda de servicios
 
-Landing page con fondos interactivos, **panel administrativo** para gestionar el contenido de la web, **gestor de órdenes** (web / WhatsApp / Instagram) y **portal del cliente**, con integración preparada hacia **Concrebill** (facturación con NCF).
+Sitio **estático** con la landing, el catálogo de servicios y una tienda: el cliente agrega servicios al carrito, completa los datos de su espacio y la solicitud se envía por **WhatsApp**. No hay base de datos, cuentas ni servidor: todo el contenido sale de archivos del repo y la web se genera completa en el build.
 
-| Capa | Tecnología | Carpeta |
+| Pieza | Tecnología | Dónde |
 |---|---|---|
-| Frontend (landing, catálogo, portal, panel admin) | Next.js 15 + Tailwind 4 + Motion + Lenis | `frontend/` |
-| Backend (órdenes, contenido, pagos, integrador) | NestJS 11 + TypeORM (SQLite en desarrollo / PostgreSQL en producción) | `backend/` |
-| ERP / core financiero | Concrebill (API REST) | `backend/src/concrebill/` |
+| Web (landing, catálogo, carrito, solicitud) | Next.js 15 + Tailwind 4 + Motion + Lenis | `frontend/` |
+| Contenido y catálogo | Archivos TypeScript | `frontend/data/` |
+| Código apagado (panel admin, login, Mi cuenta, seguimiento) | Next.js, ya sin publicar | `frontend/legacy/` |
+| Backend (órdenes, contenido, pagos, integrador) | NestJS 11 + TypeORM, **apagado, no se despliega** | `backend/` |
 
 ## Correrlo localmente
 
 Requisitos: **Node.js 20+** (recomendado 22).
 
 ```bash
-cd plataforma-servicios
-cp backend/.env.example backend/.env     # ajusta claves si quieres
-npm install          # instala "concurrently"
-npm run install:all  # instala backend y frontend
-npm run dev          # levanta API (puerto 4000) y web (puerto 3000)
+npm run install:all   # instala frontend y backend
+npm run dev           # solo la web, en http://localhost:3000
+npm run build         # genera el sitio estático
 ```
 
-Abre **http://localhost:3000**
+No hace falta ninguna variable de entorno. `npm run dev:backend` levanta también el API de antes (puerto 4000), que la web ya no usa.
 
-- Panel administrativo: http://localhost:3000/admin
-- Usuario admin inicial: `admin@fisc.com.do` / `Admin123!` (cámbialo en `backend/.env` antes del primer arranque o desde el panel → Usuarios).
-- Calidad (en `backend/` y `frontend/`): `npm run lint` (ESLint, avisos no bloqueantes) y `npm run format` (Prettier, solo comprueba).
-- Pruebas del API (`backend/`): `npm test` (unitarias de `OrdersService` y `AuthGuard`) y `npm run test:e2e` (flujo orden → cotización → pago → validación sobre SQLite en memoria; no toca `data/` ni `uploads/`).
-- Archivos huérfanos en `uploads/` (`backend/`): borrar una foto o documento desde el panel elimina también el archivo. Para limpiar los que ya quedaron: `npm run cleanup:uploads` (solo lista) y `npm run cleanup:uploads -- --apply` (borra; ignora archivos de menos de 24 h, ajustable con `--min-age-hours=N`).
-- La base de datos SQLite se crea sola en `backend/data/` con el catálogo de los 3 pilares, textos de la landing y preguntas frecuentes.
+## Cómo se cambia el contenido
 
-## Qué incluye
+Todo se edita en archivos y se despliega:
 
-**Web pública**
-- Hero con fondo interactivo (aurora que sigue al cursor + malla de puntos reactiva) y el símbolo F.I.S.C. armado con sus 4 piezas en parallax 3D que se "explota" al hacer scroll; fragmentos del logo flotando a distintas profundidades.
-- Pilares con escenas fijas (sticky), tarjetas con foco de luz y tilt 3D, proceso en scroll horizontal fijado, contadores animados, antes/después deslizable, testimonios, FAQ, contacto rápido y botón flotante de WhatsApp.
-- Catálogo y fichas de servicio, carrito / creador de órdenes en 4 pasos (servicios → espacio → fecha → contacto), seguimiento público por código + correo.
-- Portal del cliente: estado de órdenes (Recibida → En Levantamiento → Cotizada → En Ejecución → Completada), reportes diarios con fotos, documentos (cotizaciones / facturas / recibos), pago por transferencia con comprobante, y evaluación "Tú evalúas".
+- **Servicios y precios de referencia:** `frontend/data/catalogo.ts`. Los `id` no se reordenan: se agregan al final.
+- **Textos, contacto, FAQ, portafolio y testimonios:** `frontend/data/contenido.ts`. Las imágenes van en `frontend/public/` y aquí se pone su ruta. Mientras portafolio y testimonios estén vacíos, la web oculta esas secciones.
+- **WhatsApp:** `contact.whatsapp` en `contenido.ts` (solo dígitos con código de país). De ahí salen el botón flotante, el carrito, el formulario de contacto y la página de solicitud.
 
-**Panel administrativo** (`/admin`)
-- Dashboard, bandeja de órdenes con filtros, creación manual de órdenes que llegan por WhatsApp/Instagram.
-- Asignación de técnico/cuadrilla, programación, cambio de estado, reportes con fotos antes/durante/después.
-- Documentos (registro manual o sincronización con Concrebill), validación de pagos (al validar se registra el pago en Concrebill).
-- Contenido de la web editable: marca, colores, logos, hero, sección "por qué elegirnos", proceso, contacto, cuentas bancarias, SEO; servicios y pilares; testimonios; FAQ; portafolio; mensajes de contacto; evaluaciones (publicables como testimonio); usuarios y técnicos; bitácora de integración.
-- Los técnicos entran al mismo panel y sólo ven sus órdenes asignadas.
+## Cómo funciona la tienda
 
-## Concrebill
+1. El cliente agrega servicios al carrito desde el catálogo, las fichas o la portada. El carrito vive en su navegador (`localStorage`).
+2. Desde el carrito puede enviar la solicitud directo por WhatsApp, o ir a `/solicitar` para agregar los datos de su espacio, la fecha y sus notas.
+3. Se abre WhatsApp con el mensaje ya escrito (`frontend/lib/solicitud.ts`). La cotización y la factura se coordinan por ahí.
+
+## Qué se apagó
+
+El panel administrativo, las cuentas de clientes, el seguimiento de órdenes y el API ya no forman parte de la web publicada. Siguen en el repo (`frontend/legacy/` y `backend/`) hasta que se confirme que no hacen falta; ver `frontend/legacy/README.md`.
+
+## Concrebill (backend apagado)
 
 `backend/src/concrebill/concrebill.service.ts` concentra la integración:
 - `upsertClient` — al registrarse o crear una orden se crea/actualiza el cliente (nombre, RNC/Cédula, dirección, teléfono).
@@ -53,7 +48,7 @@ Abre **http://localhost:3000**
 
 Con `CONCREBILL_ENABLED=false` funciona en **modo simulado** y cada llamada queda en la bitácora del panel. Cuando tengas la documentación oficial de la API, ajusta rutas y campos en ese archivo y activa `CONCREBILL_ENABLED=true`.
 
-## PayPal
+## PayPal (backend apagado)
 
 Pendiente. La estructura está en `backend/src/payments/paypal.controller.ts` (crear orden → capturar → registrar pago en Concrebill) y el portal ya muestra la opción "Tarjeta / PayPal — próximamente".
 

@@ -24,8 +24,6 @@ export function Footer({ settings }: { settings: Settings }) {
           <ul className="space-y-2 text-sm">
             <li><Link href="/servicios" className="hover:text-white">Catálogo de servicios</Link></li>
             <li><Link href="/solicitar" className="hover:text-white">Solicitar servicio</Link></li>
-            <li><Link href="/seguimiento" className="hover:text-white">Seguimiento de orden</Link></li>
-            <li><Link href="/mi-cuenta" className="hover:text-white">Mi cuenta</Link></li>
           </ul>
         </div>
         <div>

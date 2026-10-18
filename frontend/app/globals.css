@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* El código apagado de `legacy/` no se publica: sus clases no entran en el CSS. */
+@source not "../legacy";
+
 /* Modo oscuro por clase (`html.dark`), controlado por el selector de tema */
 @custom-variant dark (&:where(.dark, .dark *));
 

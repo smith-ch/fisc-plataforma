@@ -1,25 +1,24 @@
 'use client';
 
-import { CheckCircle2, Loader2, Mail, MapPin, Phone, Send } from 'lucide-react';
+import { CheckCircle2, Mail, MapPin, Phone, Send } from 'lucide-react';
 import { useState } from 'react';
 import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
 import { Reveal } from '@/components/fx/effects';
 import { InstagramIcon, WhatsAppIcon } from '@/components/Icon';
-import { api } from '@/lib/api';
 import { waLink } from '@/lib/constants';
 import type { Settings } from '@/lib/types';
 
 export function Contact({ contact, brand }: { contact: Settings['contact']; brand: Settings['brand'] }) {
-  const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle');
-  const [error, setError] = useState('');
+  const [sent, setSent] = useState(false);
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  // Sin servidor: el mensaje se arma en el navegador y se abre en WhatsApp.
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setError(''); setState('sending');
+    if (!contact.whatsapp) return;
     const data = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
-    if (!data.email) delete data.email;
-    try { await api('/leads', { body: data }); setState('sent'); }
-    catch (err) { setError((err as Error).message); setState('idle'); }
+    const text = `Hola, soy ${data.name}. ${data.message}\n\nMi teléfono: ${data.phone}`;
+    window.open(waLink(contact.whatsapp, text), '_blank', 'noopener,noreferrer');
+    setSent(true);
   }
 
   return (
@@ -31,7 +30,7 @@ export function Contact({ contact, brand }: { contact: Settings['contact']; bran
           <h2 className="mt-4 text-5xl font-bold tracking-tight sm:text-6xl">
             Cuéntanos qué necesita <span className="font-display font-medium text-accent">tu espacio.</span>
           </h2>
-          <p className="mt-6 max-w-lg text-lg text-white/65">Escríbenos por WhatsApp, Instagram o deja tus datos y te contactamos en menos de 24 horas.</p>
+          <p className="mt-6 max-w-lg text-lg text-white/65">Escríbenos por WhatsApp o Instagram, o deja tus datos y te respondemos por WhatsApp en menos de 24 horas.</p>
           <div className="mt-10 flex flex-wrap gap-3">
             {contact.whatsapp && (
               <a href={waLink(contact.whatsapp, contact.whatsappMessage)} target="_blank" rel="noopener noreferrer" className="btn bg-[#25D366] px-6 py-3.5 text-white hover:brightness-110">
@@ -52,22 +51,21 @@ export function Contact({ contact, brand }: { contact: Settings['contact']; bran
         </Reveal>
         <Reveal delay={0.15}>
           <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-7 backdrop-blur-xl sm:p-9">
-            {state === 'sent' ? (
+            {sent ? (
               <div className="py-12 text-center">
                 <CheckCircle2 className="mx-auto h-14 w-14 text-accent" />
-                <h3 className="mt-4 text-2xl font-bold">¡Mensaje recibido!</h3>
-                <p className="mt-2 text-white/60">Te contactaremos muy pronto.</p>
+                <h3 className="mt-4 text-2xl font-bold">Abrimos WhatsApp</h3>
+                <p className="mt-2 text-white/60">Envía el mensaje desde ahí y te respondemos pronto.</p>
+                <button type="button" onClick={() => setSent(false)} className="btn-ghost mt-6 border border-white/20 hover:bg-white/10">Escribir otro mensaje</button>
               </div>
             ) : (
               <form onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
                 <h3 className="text-xl font-bold sm:col-span-2">Contacto rápido</h3>
                 <input name="name" required minLength={2} placeholder="Nombre" className="input border-white/15 bg-white/10 text-white placeholder:text-white/40" />
                 <input name="phone" required minLength={7} placeholder="Teléfono / WhatsApp" className="input border-white/15 bg-white/10 text-white placeholder:text-white/40" />
-                <input name="email" type="email" placeholder="Correo (opcional)" className="input border-white/15 bg-white/10 text-white placeholder:text-white/40 sm:col-span-2" />
                 <textarea name="message" required minLength={3} rows={4} placeholder="¿Qué necesitas?" className="input border-white/15 bg-white/10 text-white placeholder:text-white/40 sm:col-span-2" />
-                {error && <p className="text-sm text-rose-300 sm:col-span-2">{error}</p>}
-                <button disabled={state === 'sending'} className="btn-accent py-3.5 sm:col-span-2">
-                  {state === 'sending' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Enviar mensaje
+                <button disabled={!contact.whatsapp} className="btn-accent py-3.5 sm:col-span-2">
+                  <Send className="h-4 w-4" /> Enviar por WhatsApp
                 </button>
               </form>
             )}

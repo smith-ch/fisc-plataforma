@@ -14,7 +14,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <Header brand={settings.brand} />
       <main>{children}</main>
       <Footer settings={settings} />
-      <CartDrawer />
+      <CartDrawer phone={settings.contact.whatsapp} />
       <WhatsAppFloat phone={settings.contact.whatsapp} message={settings.contact.whatsappMessage} />
     </>
   );

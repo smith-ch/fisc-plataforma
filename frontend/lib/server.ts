@@ -1,37 +1,29 @@
 import 'server-only';
+import { CATALOGO } from '@/data/catalogo';
+import { CONTENIDO } from '@/data/contenido';
 import type { Pillar, Service, SiteContent } from './types';
-import { FALLBACK_CONTENT } from './fallback';
 
-const API = process.env.API_URL || 'http://localhost:4000';
+// Antes estas funciones pedían los datos a un API con caché. Ahora salen de `data/` y la web se genera
+// completa en el build: no hay peticiones en tiempo de ejecución. Se mantienen asíncronas para no tocar a quien las usa.
 
-/** Caché de datos (ISR): 5 min o hasta que el API llame a /api/revalidate (etiqueta `content`). */
-async function get<T>(path: string): Promise<T | null> {
-  try {
-    const res = await fetch(`${API}/api${path}`, { next: { revalidate: 300, tags: ['content'] } });
-    if (!res.ok) return null;
-    return (await res.json()) as T;
-  } catch {
-    return null;
-  }
-}
-
-/** Contenido de la landing; si el API no responde se usan valores por defecto. */
+/** Contenido de la landing. */
 export async function getContent(): Promise<SiteContent> {
-  const data = await get<SiteContent>('/content');
-  if (!data) return FALLBACK_CONTENT;
-  return { ...data, settings: { ...FALLBACK_CONTENT.settings, ...data.settings } };
+  return CONTENIDO;
 }
 
 export async function getCatalog(): Promise<Pillar[]> {
-  return (await get<Pillar[]>('/catalog')) ?? [];
+  return CATALOGO;
 }
 
 export async function getService(slug: string): Promise<Service | null> {
-  return get<Service>(`/services/${encodeURIComponent(slug)}`);
+  for (const pillar of CATALOGO) {
+    const service = pillar.services?.find((s) => s.slug === slug);
+    if (service) return { ...service, pillar: { ...pillar, services: undefined } };
+  }
+  return null;
 }
 
 /** Slugs de todos los servicios, para prerenderizar /servicios/[slug]. */
 export async function getServiceSlugs(): Promise<string[]> {
-  const pillars = await getCatalog();
-  return pillars.flatMap((p) => (p.services ?? []).map((s) => s.slug));
+  return CATALOGO.flatMap((p) => (p.services ?? []).map((s) => s.slug));
 }
