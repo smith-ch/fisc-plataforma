@@ -82,6 +82,7 @@ for (const p of PROYECTOS) {
     embeds.push(embed(p, leerProyecto(p)));
   } catch (e) {
     fallos += 1;
+    console.error(`${p.nombre}: ${e.message}`);
     embeds.push(embed(p, null, e.message.slice(0, 200)));
   }
 }
