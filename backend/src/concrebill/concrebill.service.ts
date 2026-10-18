@@ -90,9 +90,10 @@ export class ConcrebillService {
     return res?.data ?? [];
   }
 
-  async registerPayment(payload: ConcrebillPaymentPayload): Promise<{ id: string; receiptNumber?: string; receiptUrl?: string } | null> {
+  /** `idempotencyKey` evita que un reintento registre el mismo pago dos veces en Concrebill. */
+  async registerPayment(payload: ConcrebillPaymentPayload, idempotencyKey?: string): Promise<{ id: string; receiptNumber?: string; receiptUrl?: string } | null> {
     return this.call('registerPayment', 'POST', `/invoices/${encodeURIComponent(payload.invoiceId)}/payments`, payload,
-      () => ({ id: `CB-PAY-${Date.now().toString(36).toUpperCase()}`, receiptNumber: `REC-${Date.now().toString().slice(-6)}` }));
+      () => ({ id: `CB-PAY-${Date.now().toString(36).toUpperCase()}`, receiptNumber: `REC-${Date.now().toString().slice(-6)}` }), idempotencyKey);
   }
 
   /** Crea la orden de trabajo en Concrebill (pendiente de aprobación/cotización). */
@@ -102,7 +103,7 @@ export class ConcrebillService {
   }
 
   /** Ejecuta la petición (o la simulación) y la registra en la bitácora. Nunca lanza: devuelve null en error. */
-  private async call<T>(action: string, method: string, path: string, body: unknown, mock: () => T): Promise<T | null> {
+  private async call<T>(action: string, method: string, path: string, body: unknown, mock: () => T, idempotencyKey?: string): Promise<T | null> {
     if (!this.enabled) {
       const response = mock();
       await this.logs.save(this.logs.create({ action, status: 'simulado', request: { method, path, body }, response: response as object }));
@@ -115,6 +116,7 @@ export class ConcrebillService {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${this.config.get('CONCREBILL_API_KEY', '')}`,
+          ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
         },
         body: body ? JSON.stringify(body) : undefined,
       });

@@ -1,6 +1,6 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { AuthService } from '../auth/auth.service';
 import { AuthUser } from '../common/current-user.decorator';
 import {
@@ -30,6 +30,7 @@ export class OrdersService {
     @InjectRepository(User) private readonly users: Repository<User>,
     private readonly concrebill: ConcrebillService,
     private readonly auth: AuthService,
+    private readonly dataSource: DataSource,
   ) {}
 
   // ================== Creación ==================
@@ -48,7 +49,7 @@ export class OrdersService {
       : await this.users.findOneBy({ email, role: Role.CLIENT });
 
     const { items, source, ...fields } = dto;
-    let order = this.orders.create({
+    const draft = this.orders.create({
       ...fields,
       contactEmail: email,
       client: client ?? null,
@@ -57,15 +58,18 @@ export class OrdersService {
         service: byId.get(i.serviceId)!, serviceName: byId.get(i.serviceId)!.name, quantity: i.quantity ?? 1, notes: i.notes ?? null,
       }) as OrderItem),
     });
-    order = await this.orders.save(order);
-    order.code = orderCode(order.id);
-    await this.orders.update(order.id, { code: order.code });
-
-    await this.updates.save(this.updates.create({
-      order: { id: order.id }, status: OrderStatus.RECEIVED, visibleToClient: true,
-      author: isStaff ? { id: user!.id } : null,
-      message: 'Solicitud recibida. Un supervisor te contactará para coordinar el levantamiento.',
-    }));
+    // Orden, código y primera entrada de la bitácora van juntos: si algo falla no queda una orden sin código.
+    const order = await this.dataSource.transaction(async (m) => {
+      const saved = await m.save(draft);
+      saved.code = orderCode(saved.id);
+      await m.update(Order, saved.id, { code: saved.code });
+      await m.save(m.create(OrderUpdate, {
+        order: { id: saved.id }, status: OrderStatus.RECEIVED, visibleToClient: true,
+        author: isStaff ? { id: user!.id } : null,
+        message: 'Solicitud recibida. Un supervisor te contactará para coordinar el levantamiento.',
+      }));
+      return saved;
+    });
 
     // Sincroniza el cliente con Concrebill (completa RNC/Cédula si no lo tenía) y, si está
     // sincronizado, crea allá la orden de trabajo (pendiente de que el equipo la cotice).
@@ -314,40 +318,56 @@ export class OrdersService {
    * ("Registrar pago y emitir recibo para la factura X").
    */
   async reviewPayment(paymentId: number, user: AuthUser, dto: ReviewPaymentDto) {
-    const payment = await this.payments.findOne({ where: { id: paymentId }, relations: { order: { client: true } } });
+    const payment = await this.payments.findOne({ where: { id: paymentId }, relations: { order: { client: true }, document: true } });
     if (!payment) throw new NotFoundException();
-    if (payment.status !== PaymentRecordStatus.PENDING) throw new BadRequestException('Este pago ya fue procesado');
-    payment.status = dto.status;
-    payment.notes = dto.notes ?? payment.notes;
-    payment.reviewedBy = { id: user.id } as User;
+    if (payment.status !== PaymentRecordStatus.PENDING) throw new ConflictException('Este pago ya fue procesado');
     const orderId = payment.order.id;
+    const notes = dto.notes ?? payment.notes;
+
+    // Se "reclama" el pago con un UPDATE condicional (solo si sigue pendiente): si dos admins
+    // o un doble clic llegan a la vez, solo uno afecta la fila y el otro recibe 409 sin llamar a Concrebill.
+    const claim = await this.payments.update(
+      { id: paymentId, status: PaymentRecordStatus.PENDING },
+      { status: dto.status, notes, reviewedBy: { id: user.id } as User },
+    );
+    if (!claim.affected) throw new ConflictException('Este pago ya fue procesado');
 
     if (dto.status === PaymentRecordStatus.APPROVED) {
       // Si el cliente no tiene la sincronización con Concrebill activada, el pago queda validado
       // en la web y el recibo se registra manualmente desde el panel.
-      const res = payment.order.client?.concrebillSync ? await (async () => {
+      let res: Awaited<ReturnType<ConcrebillService['registerPayment']>> = null;
+      if (payment.order.client?.concrebillSync) {
         const invoice = payment.document
           ?? (await this.documents.findOne({ where: { order: { id: orderId }, type: DocumentType.INVOICE }, order: { createdAt: 'DESC' } }));
-        return this.concrebill.registerPayment({
+        res = await this.concrebill.registerPayment({
           invoiceId: invoice?.concrebillId || invoice?.number || payment.order.code || String(orderId),
           amount: Number(payment.amount), method: payment.method, reference: payment.reference,
           date: new Date().toISOString().slice(0, 10),
-        });
-      })() : null;
-      if (res) {
-        payment.concrebillPaymentId = res.id;
-        if (res.receiptNumber) {
-          await this.documents.save(this.documents.create({
-            order: { id: orderId }, type: DocumentType.RECEIPT, number: res.receiptNumber, amount: payment.amount,
-            status: 'emitido', fileUrl: res.receiptUrl ?? null, concrebillId: res.id, origin: 'concrebill',
-            issuedAt: new Date().toISOString().slice(0, 10),
-          }));
+        }, `pago-${paymentId}`);
+        if (!res) {
+          // Concrebill no confirmó: se devuelve a pendiente para poder reintentar (la clave de idempotencia evita duplicar).
+          await this.payments.update({ id: paymentId, status: PaymentRecordStatus.APPROVED },
+            { status: PaymentRecordStatus.PENDING, notes: payment.notes, reviewedBy: null });
+          throw new BadGatewayException('No se pudo registrar el pago en Concrebill. El pago sigue pendiente; intenta de nuevo.');
         }
       }
-      await this.payments.save(payment);
-      await this.log(orderId, user, `Pago de ${this.money(Number(payment.amount))} validado. ¡Gracias!`, null, true);
+      await this.dataSource.transaction(async (m) => {
+        if (res) {
+          await m.update(Payment, paymentId, { concrebillPaymentId: res.id });
+          if (res.receiptNumber) {
+            await m.save(m.create(BillingDocument, {
+              order: { id: orderId }, type: DocumentType.RECEIPT, number: res.receiptNumber, amount: payment.amount,
+              status: 'emitido', fileUrl: res.receiptUrl ?? null, concrebillId: res.id, origin: 'concrebill',
+              issuedAt: new Date().toISOString().slice(0, 10),
+            }));
+          }
+        }
+        await m.save(m.create(OrderUpdate, {
+          order: { id: orderId }, author: { id: user.id }, status: null, visibleToClient: true,
+          message: `Pago de ${this.money(Number(payment.amount))} validado. ¡Gracias!`,
+        }));
+      });
     } else {
-      await this.payments.save(payment);
       await this.log(orderId, user, `El comprobante de pago fue rechazado${dto.notes ? `: ${dto.notes}` : '.'}`, null, true);
     }
     await this.recomputePaymentStatus(orderId);
