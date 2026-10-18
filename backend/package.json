@@ -12,7 +12,8 @@
     "format": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "format:write": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "test": "jest",
-    "test:e2e": "jest --config test/jest-e2e.json --runInBand"
+    "test:e2e": "jest --config test/jest-e2e.json --runInBand",
+    "cleanup:uploads": "ts-node src/uploads/cleanup-uploads.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.5",

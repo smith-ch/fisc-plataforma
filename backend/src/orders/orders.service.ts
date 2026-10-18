@@ -7,6 +7,7 @@ import {
   DocumentType, ORDER_STATUS_LABELS, OrderSource, OrderStatus, PaymentMethod, PaymentRecordStatus, PaymentStatus, PhotoStage, Role,
 } from '../common/enums';
 import { orderCode } from '../common/utils';
+import { removeUploadedFile } from '../uploads/upload-files';
 import { ConcrebillService } from '../concrebill/concrebill.service';
 import {
   BillingDocument, Order, OrderItem, OrderPhoto, OrderUpdate, Payment, Review, ServiceItem, User,
@@ -212,7 +213,9 @@ export class OrdersService {
   }
 
   async deletePhoto(photoId: number) {
+    const photo = await this.photos.findOneBy({ id: photoId });
     await this.photos.delete(photoId);
+    if (photo) await removeUploadedFile(photo.url);
     return { ok: true };
   }
 
@@ -255,7 +258,9 @@ export class OrdersService {
   }
 
   async deleteDocument(docId: number) {
+    const doc = await this.documents.findOneBy({ id: docId });
     await this.documents.delete(docId);
+    if (doc) await removeUploadedFile(doc.fileUrl);
     return { ok: true };
   }
 

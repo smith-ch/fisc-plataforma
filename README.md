@@ -26,6 +26,7 @@ Abre **http://localhost:3000**
 - Usuario admin inicial: `admin@fisc.com.do` / `Admin123!` (cámbialo en `backend/.env` antes del primer arranque o desde el panel → Usuarios).
 - Calidad (en `backend/` y `frontend/`): `npm run lint` (ESLint, avisos no bloqueantes) y `npm run format` (Prettier, solo comprueba).
 - Pruebas del API (`backend/`): `npm test` (unitarias de `OrdersService` y `AuthGuard`) y `npm run test:e2e` (flujo orden → cotización → pago → validación sobre SQLite en memoria; no toca `data/` ni `uploads/`).
+- Archivos huérfanos en `uploads/` (`backend/`): borrar una foto o documento desde el panel elimina también el archivo. Para limpiar los que ya quedaron: `npm run cleanup:uploads` (solo lista) y `npm run cleanup:uploads -- --apply` (borra; ignora archivos de menos de 24 h, ajustable con `--min-age-hours=N`).
 - La base de datos SQLite se crea sola en `backend/data/` con el catálogo de los 3 pilares, textos de la landing y preguntas frecuentes.
 
 ## Qué incluye
