@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
@@ -9,6 +9,7 @@ import { dirname, resolve } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { AuthGuard } from './common/auth.guard';
+import { RevalidateInterceptor } from './common/revalidate.interceptor';
 import { ConcrebillModule } from './concrebill/concrebill.module';
 import { ContentModule } from './content/content.module';
 import { DashboardController } from './dashboard/dashboard.controller';
@@ -57,6 +58,6 @@ function databaseConfig(config: ConfigService): TypeOrmModuleOptions {
     OrdersModule,
   ],
   controllers: [UploadsController, PaypalController, DashboardController],
-  providers: [{ provide: APP_GUARD, useClass: AuthGuard }, SeedService],
+  providers: [{ provide: APP_GUARD, useClass: AuthGuard }, { provide: APP_INTERCEPTOR, useClass: RevalidateInterceptor }, SeedService],
 })
 export class AppModule {}

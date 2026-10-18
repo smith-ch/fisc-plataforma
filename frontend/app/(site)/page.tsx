@@ -9,7 +9,6 @@ import { Projects } from '@/components/landing/Projects';
 import { Testimonials } from '@/components/landing/Testimonials';
 import { getCatalog, getContent } from '@/lib/server';
 
-export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const [{ settings, testimonials, faqs, projects }, pillars] = await Promise.all([getContent(), getCatalog()]);

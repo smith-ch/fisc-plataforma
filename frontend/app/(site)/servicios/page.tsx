@@ -6,7 +6,6 @@ import { AddToCart } from '@/components/site/AddToCart';
 import { PageHero } from '@/components/ui/PageHero';
 import { getCatalog } from '@/lib/server';
 
-export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Catálogo de servicios' };
 
 export default async function ServicesPage() {
