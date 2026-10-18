@@ -1,18 +1,23 @@
 import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Put, Query } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { Repository } from 'typeorm';
 import { Role } from '../common/enums';
 import { parsePage, toPaged } from '../common/pagination';
 import { Public, Roles } from '../common/roles.decorator';
 import { Faq, Lead, Project, Review, SiteSetting, Testimonial } from '../entities';
 import { SETTING_KEYS } from './settings.defaults';
+import { sanitizeSetting } from './settings.validation';
 
 class LeadDto {
   @IsString() @MinLength(2) @MaxLength(120) name: string;
   @IsString() @MinLength(7) @MaxLength(30) phone: string;
   @IsOptional() @IsEmail() email?: string;
   @IsString() @MinLength(3) @MaxLength(2000) message: string;
+}
+
+export class HandleLeadDto {
+  @IsBoolean() handled: boolean;
 }
 
 @Controller()
@@ -57,8 +62,9 @@ export class ContentController {
   }
 
   @Roles(Role.ADMIN) @Put('admin/settings/:key')
-  async saveSetting(@Param('key') key: string, @Body() value: Record<string, unknown>) {
+  async saveSetting(@Param('key') key: string, @Body() body: unknown) {
     if (!SETTING_KEYS.includes(key)) throw new BadRequestException('Sección de configuración desconocida');
+    const value = sanitizeSetting(key, body);
     await this.settings.save({ key, value });
     return value;
   }
@@ -76,8 +82,8 @@ export class ContentController {
   }
 
   @Roles(Role.ADMIN) @Patch('admin/leads/:id')
-  async handleLead(@Param('id', ParseIntPipe) id: number, @Body() body: { handled: boolean }) {
-    await this.leads.update(id, { handled: !!body.handled });
+  async handleLead(@Param('id', ParseIntPipe) id: number, @Body() body: HandleLeadDto) {
+    await this.leads.update(id, { handled: body.handled });
     return this.leads.findOneBy({ id });
   }
 

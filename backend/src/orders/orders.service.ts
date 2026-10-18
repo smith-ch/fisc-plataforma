@@ -129,7 +129,7 @@ export class OrdersService {
     });
   }
 
-  async listForStaff(user: AuthUser, filters: { status?: string; q?: string; technicianId?: string; source?: string } & PageQuery) {
+  async listForStaff(user: AuthUser, filters: { status?: string; q?: string; technicianId?: string | number; source?: string } & PageQuery) {
     const { page, limit, skip } = parsePage(filters);
     const qb = this.orders.createQueryBuilder('o')
       .leftJoinAndSelect('o.items', 'items')
@@ -293,6 +293,7 @@ export class OrdersService {
     if (!order) throw new NotFoundException();
     this.assertAccess(order, user);
     if (!receiptUrl) throw new BadRequestException('Adjunta el comprobante de la transferencia');
+    await this.assertDocumentOfOrder(id, dto.documentId);
     const payment = await this.payments.save(this.payments.create({
       order: { id }, method: PaymentMethod.TRANSFER, amount: String(dto.amount), reference: dto.reference ?? null,
       bank: dto.bank ?? null, receiptUrl, document: dto.documentId ? { id: dto.documentId } : null,
@@ -304,6 +305,7 @@ export class OrdersService {
 
   async adminPayment(id: number, user: AuthUser, dto: AdminPaymentDto) {
     await this.getOrder(id);
+    await this.assertDocumentOfOrder(id, dto.documentId);
     const payment = await this.payments.save(this.payments.create({
       order: { id }, method: dto.method, amount: String(dto.amount), reference: dto.reference ?? null, bank: dto.bank ?? null,
       notes: dto.notes ?? null, document: dto.documentId ? { id: dto.documentId } : null,
@@ -399,6 +401,13 @@ export class OrdersService {
   }
 
   // ================== Helpers ==================
+
+  /** Un pago solo puede asociarse a un documento (factura/cotización) de su misma orden. */
+  private async assertDocumentOfOrder(orderId: number, documentId?: number) {
+    if (documentId === undefined || documentId === null) return;
+    const belongs = await this.documents.exist({ where: { id: documentId, order: { id: orderId } } });
+    if (!belongs) throw new BadRequestException('El documento no pertenece a esta orden');
+  }
 
   private async getOrder(id: number) {
     const order = await this.orders.findOne({ where: { id }, relations: { client: true, technician: true } });

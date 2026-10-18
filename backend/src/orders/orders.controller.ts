@@ -8,7 +8,7 @@ import { Public, Roles } from '../common/roles.decorator';
 import { publicPath, uploadOptions } from '../uploads/upload.options';
 import {
   AdminPaymentDto, ChangeStatusDto, ClientPaymentDto, CreateOrderDto, DocumentDto, ProgressUpdateDto, ReviewDto, ReviewPaymentDto,
-  UpdateOrderDto,
+  StaffOrdersQueryDto, UpdateDocumentDto, UpdateOrderDto,
 } from './orders.dto';
 import { OrdersService } from './orders.service';
 
@@ -56,7 +56,7 @@ export class StaffOrdersController {
   constructor(private readonly orders: OrdersService) {}
 
   @Roles(Role.ADMIN, Role.TECHNICIAN) @Get('staff/orders')
-  list(@CurrentUser() user: AuthUser, @Query() q: { status?: string; q?: string; technicianId?: string; source?: string; page?: string; limit?: string }) {
+  list(@CurrentUser() user: AuthUser, @Query() q: StaffOrdersQueryDto) {
     return this.orders.listForStaff(user, q);
   }
 
@@ -106,7 +106,7 @@ export class StaffOrdersController {
   }
 
   @Roles(Role.ADMIN) @Patch('admin/documents/:id')
-  updateDocument(@Param('id', ParseIntPipe) id: number, @Body() dto: Partial<DocumentDto>) {
+  updateDocument(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateDocumentDto) {
     return this.orders.updateDocument(id, dto);
   }
 

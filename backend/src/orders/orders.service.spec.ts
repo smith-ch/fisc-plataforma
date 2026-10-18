@@ -323,6 +323,35 @@ describe('OrdersService', () => {
       await expect(approve(p.id)).rejects.toBeInstanceOf(ConflictException);
     });
 
+    describe('documentId del pago (#10)', () => {
+      it('acepta un documento de la misma orden', async () => {
+        const doc = await addInvoice(700);
+        const p = await service.clientPayment(id, asUser(fx.client), { amount: 700, documentId: doc.id }, '/uploads/receipts/c.jpg');
+        expect((await ds.getRepository(Payment).findOneOrFail({ where: { id: p.id }, relations: { document: true } })).document?.id).toBe(
+          doc.id,
+        );
+      });
+
+      it('rechaza un documento de otra orden (cliente y admin) sin crear el pago', async () => {
+        const other = await service.create(dto(), asUser(fx.otherClient));
+        const foreign = await service.addDocument(
+          other.id,
+          { type: DocumentType.INVOICE, number: 'AJENA-1', amount: 50 },
+          asUser(fx.admin),
+        );
+        await expect(
+          service.clientPayment(id, asUser(fx.client), { amount: 50, documentId: foreign.id }, '/uploads/receipts/c.jpg'),
+        ).rejects.toBeInstanceOf(BadRequestException);
+        await expect(
+          service.adminPayment(id, asUser(fx.admin), { method: PaymentMethod.CASH, amount: 50, documentId: foreign.id }),
+        ).rejects.toBeInstanceOf(BadRequestException);
+        await expect(
+          service.clientPayment(id, asUser(fx.client), { amount: 50, documentId: 999999 }, '/uploads/receipts/c.jpg'),
+        ).rejects.toBeInstanceOf(BadRequestException);
+        expect(await ds.getRepository(Payment).count()).toBe(0);
+      });
+    });
+
     it('un pago inexistente devuelve 404', async () => {
       await expect(approve(404)).rejects.toBeInstanceOf(NotFoundException);
     });
