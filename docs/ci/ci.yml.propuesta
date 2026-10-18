@@ -1,0 +1,57 @@
+# PROPUESTA para #18. Copiar a .github/workflows/ci.yml (lo hace el dueño: los agentes no editan workflows).
+# CI en pull requests: lint, tipos, pruebas y build de backend y frontend. No despliega nada y no usa secretos.
+name: CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      # Solo backend/: evita descargar los ~130 MB de marketing/videos.
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: backend
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:e2e
+      - run: npm run build
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: frontend
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      # El build no necesita el API: sin API_URL usa el valor por defecto y las páginas con datos caen a su contenido de respaldo.
+      - run: npm run build
