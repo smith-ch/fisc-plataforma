@@ -8,6 +8,13 @@ import { ConcrebillService } from '../concrebill/concrebill.service';
 import { Order, User } from '../entities';
 import { LoginDto, RegisterDto, UpdateProfileDto } from './auth.dto';
 
+/** Sesión recién emitida: el JWT (que el controlador pone en una cookie httpOnly), su vencimiento y el usuario. */
+export interface Session {
+  token: string;
+  exp?: number;
+  user: Omit<User, 'passwordHash'>;
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -20,15 +27,17 @@ export class AuthService {
   async register(dto: RegisterDto) {
     const email = dto.email.toLowerCase().trim();
     if (await this.users.exist({ where: { email } })) throw new ConflictException('Ya existe una cuenta con ese correo');
-    const user = await this.users.save(this.users.create({
-      name: dto.name.trim(),
-      email,
-      passwordHash: await bcrypt.hash(dto.password, 10),
-      phone: dto.phone ?? null,
-      documentId: dto.documentId ?? null,
-      address: dto.address ?? null,
-      role: Role.CLIENT,
-    }));
+    const user = await this.users.save(
+      this.users.create({
+        name: dto.name.trim(),
+        email,
+        passwordHash: await bcrypt.hash(dto.password, 10),
+        phone: dto.phone ?? null,
+        documentId: dto.documentId ?? null,
+        address: dto.address ?? null,
+        role: Role.CLIENT,
+      }),
+    );
     // Vincula órdenes hechas como invitado con el mismo correo
     await this.orders.update({ contactEmail: email, client: IsNull() }, { client: { id: user.id } });
     await this.syncClient(user);
@@ -36,8 +45,11 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.users.createQueryBuilder('u').addSelect('u.passwordHash')
-      .where('u.email = :email', { email: dto.email.toLowerCase().trim() }).getOne();
+    const user = await this.users
+      .createQueryBuilder('u')
+      .addSelect('u.passwordHash')
+      .where('u.email = :email', { email: dto.email.toLowerCase().trim() })
+      .getOne();
     if (!user || !(await bcrypt.compare(dto.password, user.passwordHash))) {
       throw new UnauthorizedException('Correo o contraseña incorrectos');
     }
@@ -75,17 +87,32 @@ export class AuthService {
    */
   async syncClient(user: User): Promise<string | null> {
     if (!user.concrebillSync) return null;
-    const id = await this.concrebill.upsertClient({
-      name: user.name, email: user.email, phone: user.phone, documentId: user.documentId, address: user.address,
-      externalId: `web-${user.id}`,
-    }, user.concrebillClientId);
+    const id = await this.concrebill.upsertClient(
+      {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        documentId: user.documentId,
+        address: user.address,
+        externalId: `web-${user.id}`,
+      },
+      user.concrebillClientId,
+    );
     if (id && id !== user.concrebillClientId) await this.users.update(user.id, { concrebillClientId: id });
     return id;
   }
 
-  private session(user: User) {
+  /** Emite un JWT nuevo con el rol y el estado actuales; falla si la cuenta ya no existe o está desactivada. */
+  async refresh(id: number): Promise<Session> {
+    const user = await this.users.findOneBy({ id });
+    if (!user || !user.active) throw new UnauthorizedException('Sesión inválida o expirada');
+    return this.session(user);
+  }
+
+  private session(user: User): Session {
     const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role, name: user.name });
+    const exp = (this.jwt.decode(token) as { exp?: number } | null)?.exp;
     const { passwordHash: _omit, ...safe } = user;
-    return { token, user: safe };
+    return { token, exp, user: safe };
   }
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { api, getToken, setToken } from '@/lib/api';
+import { api, hasSessionHint, setSessionHint } from '@/lib/api';
 import type { Service, User } from '@/lib/types';
 
 // ---------------- Autenticación ----------------
@@ -55,7 +55,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
 
   const refresh = useCallback(async () => {
-    if (!getToken()) { setUser(null); setLoading(false); return; }
+    if (!hasSessionHint()) { setUser(null); setLoading(false); return; }
     try { setUser(await api<User>('/auth/me')); } catch { setUser(null); } finally { setLoading(false); }
   }, []);
 
@@ -64,6 +64,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
     try { setItems(JSON.parse(localStorage.getItem(CART_KEY) || '[]')); } catch { /* vacío */ }
   }, [refresh]);
 
+  // Mientras haya sesión se renueva la cookie (el JWT dura poco) cada 30 min y al volver a la pestaña.
+  const signedIn = !!user;
+  useEffect(() => {
+    if (!signedIn) return;
+    const renew = () => api<{ user: User }>('/auth/refresh', { method: 'POST' }).then((r) => setUser(r.user)).catch(() => { setSessionHint(false); setUser(null); });
+    const onVisible = () => { if (document.visibilityState === 'visible') renew(); };
+    const timer = setInterval(renew, 30 * 60 * 1000);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', onVisible); };
+  }, [signedIn]);
+
   useEffect(() => {
     try { localStorage.setItem(CART_KEY, JSON.stringify(items)); } catch { /* sin almacenamiento */ }
   }, [items]);
@@ -71,14 +82,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const auth = useMemo<AuthCtx>(() => ({
     user, loading, refresh,
     login: async (email, password) => {
-      const res = await api<{ token: string; user: User }>('/auth/login', { body: { email, password } });
-      setToken(res.token); setUser(res.user); return res.user;
+      const res = await api<{ user: User }>('/auth/login', { body: { email, password } });
+      setSessionHint(true); setUser(res.user); return res.user;
     },
     register: async (data) => {
-      const res = await api<{ token: string; user: User }>('/auth/register', { body: data });
-      setToken(res.token); setUser(res.user); return res.user;
+      const res = await api<{ user: User }>('/auth/register', { body: data });
+      setSessionHint(true); setUser(res.user); return res.user;
     },
-    logout: () => { setToken(null); setUser(null); },
+    logout: () => { setSessionHint(false); setUser(null); api('/auth/logout', { method: 'POST' }).catch(() => { /* la cookie vence sola */ }); },
   }), [user, loading, refresh]);
 
   const cart = useMemo<CartCtx>(() => ({
