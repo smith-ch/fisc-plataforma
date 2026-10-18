@@ -4,6 +4,7 @@ import {
   BarChart3, ClipboardList, CreditCard, FileClock, HelpCircle, Images, Layers, LayoutDashboard, LogOut, Mail, Menu, MessageSquareQuote,
   Palette, Star, Users, Wrench, X, ExternalLink, Moon, Sun,
 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -54,8 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const sidebar = (
     <nav className="flex h-full flex-col">
       <Link href="/admin" className="flex items-center gap-2.5 px-5 py-6">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/symbol-white.png" alt="" className="h-8" />
+        <Image src="/brand/symbol-white.webp" alt="" width={422} height={511} sizes="27px" className="h-8 w-auto" />
         <span className="leading-none"><span className="block font-display font-bold tracking-[0.14em]">F.I.S.C.</span><span className="text-[10px] tracking-widest text-white/50 uppercase">{isAdmin ? 'Administración' : 'Técnicos'}</span></span>
       </Link>
       <div className="flex-1 space-y-6 overflow-y-auto px-3 pb-6">

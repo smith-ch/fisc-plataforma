@@ -101,7 +101,7 @@ function buildLogo(S) {
   S.lh = h; S.lw = w;
   S.halo = el('div', 'halo', root);
   S.pieces = ['piece-f', 'piece-s-top', 'piece-s-mid', 'piece-s-bottom'].map((n, i) => {
-    const img = el('img', 'piece', root); img.src = BR + n + '-white.png'; img.style.width = w + 'px'; img.style.height = h + 'px';
+    const img = el('img', 'piece', root); img.src = BR + n + '-white.webp'; img.style.width = w + 'px'; img.style.height = h + 'px';
     return { img, off: [[-90, -60], [70, -110], [-70, 80], [90, 110]][i], at: 0.15 + i * 0.22 };
   });
   S.word = el('div', 'word', root, 'F.I.S.C.');

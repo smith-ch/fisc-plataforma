@@ -1,21 +1,28 @@
 'use client';
 
 import { motion, useAnimationFrame, useMotionTemplate, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from 'motion/react';
+import Image from 'next/image';
+import { preload } from 'react-dom';
 import { useEffect, useRef } from 'react';
 
 type Variant = 'white' | 'black' | 'auto';
 
-/** Imagen de una pieza; con `auto` se muestra la negra en claro y la blanca en oscuro. */
-function PieceImg({ id, variant, className = '', style }: { id: string; variant: Variant; className?: string; style?: React.CSSProperties }) {
-  /* eslint-disable @next/next/no-img-element */
-  if (variant !== 'auto') return <img src={`/brand/piece-${id}-${variant}.png`} alt="" draggable={false} className={className} style={style} />;
+/**
+ * Imagen de una pieza (WebP de 422×511 servido por next/image); con `auto` se
+ * muestra la negra en claro y la blanca en oscuro. `sizes` es el ancho real con
+ * que se pinta, para que el optimizador sirva el tamaño justo.
+ */
+function PieceImg({ id, variant, sizes, className = '', style }: { id: string; variant: Variant; sizes: string; className?: string; style?: React.CSSProperties }) {
+  const img = (v: 'black' | 'white', cls: string) => (
+    <Image src={`/brand/piece-${id}-${v}.webp`} alt="" width={422} height={511} sizes={sizes} draggable={false} className={cls} style={style} />
+  );
+  if (variant !== 'auto') return img(variant, className);
   return (
     <>
-      <img src={`/brand/piece-${id}-black.png`} alt="" draggable={false} className={`${className} dark:hidden`} style={style} />
-      <img src={`/brand/piece-${id}-white.png`} alt="" draggable={false} className={`${className} hidden dark:block`} style={style} />
+      {img('black', `${className} dark:hidden`)}
+      {img('white', `${className} hidden dark:block`)}
     </>
   );
-  /* eslint-enable @next/next/no-img-element */
 }
 
 /**
@@ -68,6 +75,8 @@ export function LogoParallax({ variant = 'auto', className = '', scrollTarget }:
   /** Sección que controla la "explosión" con el scroll (por defecto el propio componente). */
   scrollTarget?: React.RefObject<HTMLElement | null>;
 }) {
+  // Las máscaras del brillo se descubren por CSS (tarde); se precargan para que la pieza no espere por ellas
+  for (const p of PIECES) preload(`/brand/piece-${p.id}-white.webp`, { as: 'image' });
   const ref = useRef<HTMLDivElement>(null);
   const { mx, my } = usePointer();
   const sx = useSpring(mx, { stiffness: 60, damping: 18 });
@@ -116,7 +125,7 @@ function Piece({ piece, index, variant, sx, sy, explode }: {
   // Sombra proyectada hacia el lado opuesto a la luz: da sensación de volumen
   const shadow = useTransform([sx, sy] as MotionValue[], ([a, b]: number[]) =>
     `drop-shadow(${-a * piece.depth * 0.35}px ${12 - b * piece.depth * 0.35}px ${10 + piece.depth * 0.25}px rgba(0,0,0,.28))`);
-  const mask = `url(/brand/piece-${piece.id}-white.png) center / 100% 100% no-repeat`;
+  const mask = `url(/brand/piece-${piece.id}-white.webp) center / 100% 100% no-repeat`;
 
   return (
     <motion.div className="absolute inset-0" style={{ x, y, rotate, z: piece.depth * 2 }}>
@@ -127,7 +136,7 @@ function Piece({ piece, index, variant, sx, sy, explode }: {
         animate={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }}
         transition={{ duration: 1.6, delay: 0.2 + index * 0.12, ease: [0.16, 1, 0.3, 1] }}
       >
-        <PieceImg id={piece.id} variant={variant} className="h-full w-full" />
+        <PieceImg id={piece.id} variant={variant} sizes="(min-width: 1024px) 448px, 224px" className="h-full w-full" />
         <motion.div aria-hidden className="absolute inset-0 opacity-45 mix-blend-screen dark:opacity-100 dark:mix-blend-soft-light"
           style={{ background: sheen, mask, WebkitMask: mask }} />
       </motion.div>
@@ -173,7 +182,7 @@ function Shard({ s, sx, sy, scroll, variant, i }: {
   return (
     <motion.div className="absolute" style={{ left: `${s.left}%`, top: `${s.top}%`, width: s.size, x, y, rotate }}>
       <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 1.2, delay: 0.6 + i * 0.08 }}>
-        <PieceImg id={s.id} variant={variant} className="w-full animate-float"
+        <PieceImg id={s.id} variant={variant} sizes={`${s.size}px`} className="w-full animate-float"
           style={{ filter: `blur(${s.blur}px)`, opacity: s.o, animationDelay: `${i * -1.3}s`, animationDuration: `${7 + (i % 4) * 2}s` }} />
       </motion.div>
     </motion.div>
