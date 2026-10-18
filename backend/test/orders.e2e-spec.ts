@@ -12,7 +12,9 @@ describe('Órdenes (e2e)', () => {
   let http: ReturnType<typeof request>;
   let adminToken: string;
   let serviceId: number;
-  const auth = (t: string) => ({ Authorization: `Bearer ${t}` });
+  // La sesión viaja en una cookie httpOnly: se extrae su valor de Set-Cookie y se reenvía como lo haría el navegador.
+  const tokenOf = (res: request.Response): string => /ps_session=([^;]+)/.exec([res.headers['set-cookie']].flat().join(';'))![1];
+  const auth = (t: string) => ({ Cookie: `ps_session=${t}` });
 
   const order = (email: string) => ({
     items: [{ serviceId }],
@@ -37,7 +39,7 @@ describe('Órdenes (e2e)', () => {
       .post('/api/auth/login')
       .send({ email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD })
       .expect(201);
-    adminToken = login.body.token;
+    adminToken = tokenOf(login);
     const catalog = await http.get('/api/services').expect(200);
     serviceId = (Array.isArray(catalog.body) ? catalog.body : catalog.body.items)[0].id;
   });
@@ -55,7 +57,7 @@ describe('Órdenes (e2e)', () => {
       .post('/api/auth/register')
       .send({ name: 'Cliente Flujo', email: 'flujo@test.local', password: 'Secreta123' })
       .expect(201);
-    const clientToken: string = reg.body.token;
+    const clientToken: string = tokenOf(reg);
     const mine = await http.get('/api/my/orders').set(auth(clientToken)).expect(200);
     expect(mine.body.map((o: { id: number }) => o.id)).toContain(id);
 
@@ -114,8 +116,14 @@ describe('Órdenes (e2e)', () => {
       .post('/api/auth/register')
       .send({ name: 'Otro Cliente', email: 'otro@test.local', password: 'Secreta123' })
       .expect(201);
-    await http.get('/api/staff/orders').set(auth(reg.body.token)).expect(403);
-    await http.get('/api/admin/payments').set(auth(reg.body.token)).expect(403);
+    await http
+      .get('/api/staff/orders')
+      .set(auth(tokenOf(reg)))
+      .expect(403);
+    await http
+      .get('/api/admin/payments')
+      .set(auth(tokenOf(reg)))
+      .expect(403);
     await http.get('/api/admin/payments').set(auth(adminToken)).expect(200);
   });
 
@@ -129,11 +137,17 @@ describe('Órdenes (e2e)', () => {
       .post('/api/auth/register')
       .send({ name: 'Intruso', email: 'intruso@test.local', password: 'Secreta123' })
       .expect(201);
-    await http.get(`/api/my/orders/${created.body.id}`).set(auth(owner.body.token)).expect(200);
-    await http.get(`/api/my/orders/${created.body.id}`).set(auth(stranger.body.token)).expect(403);
+    await http
+      .get(`/api/my/orders/${created.body.id}`)
+      .set(auth(tokenOf(owner)))
+      .expect(200);
+    await http
+      .get(`/api/my/orders/${created.body.id}`)
+      .set(auth(tokenOf(stranger)))
+      .expect(403);
     await http
       .post(`/api/my/orders/${created.body.id}/payments`)
-      .set(auth(stranger.body.token))
+      .set(auth(tokenOf(stranger)))
       .field('amount', '10')
       .attach('receipt', Buffer.from('x'), { filename: 'c.pdf', contentType: 'application/pdf' })
       .expect(403);
@@ -186,9 +200,9 @@ describe('Órdenes (e2e)', () => {
     beforeAll(async () => {
       const created = await http.post('/api/orders').send(order('val@test.local')).expect(201);
       id = created.body.id;
-      clientToken = (
-        await http.post('/api/auth/register').send({ name: 'Cliente Val', email: 'val@test.local', password: 'Secreta123' }).expect(201)
-      ).body.token;
+      clientToken = tokenOf(
+        await http.post('/api/auth/register').send({ name: 'Cliente Val', email: 'val@test.local', password: 'Secreta123' }).expect(201),
+      );
       const doc = await http
         .post(`/api/admin/orders/${id}/documents`)
         .set(auth(adminToken))
@@ -256,6 +270,73 @@ describe('Órdenes (e2e)', () => {
           .attach('receipt', Buffer.from('x'), { filename: 'c.pdf', contentType: 'application/pdf' });
       await pay(foreign.body.id).expect(400);
       await pay(docId).expect(201);
+    });
+  });
+
+  describe('sesión con cookie httpOnly (#9)', () => {
+    const cookiesOf = (res: request.Response) => [res.headers['set-cookie']].flat().filter(Boolean) as string[];
+
+    it('el login pone el JWT solo en una cookie httpOnly y no lo devuelve en el cuerpo', async () => {
+      const res = await http
+        .post('/api/auth/login')
+        .send({ email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD })
+        .expect(201);
+      expect(res.body.token).toBeUndefined();
+      expect(res.body.user).toMatchObject({ email: process.env.ADMIN_EMAIL, role: 'admin' });
+      expect(res.body.user.passwordHash).toBeUndefined();
+      const cookie = cookiesOf(res).find((c) => c.startsWith('ps_session='))!;
+      expect(cookie).toMatch(/HttpOnly/i);
+      expect(cookie).toMatch(/SameSite=Lax/i);
+      expect(cookie).toMatch(/Path=\//);
+      expect(cookie).toMatch(/Expires=/i);
+      expect(JSON.stringify(res.body)).not.toContain(tokenOf(res));
+    });
+
+    it('el registro también inicia sesión con cookie', async () => {
+      const res = await http
+        .post('/api/auth/register')
+        .send({ name: 'Cookie Reg', email: 'cookie-reg@test.local', password: 'Secreta123' })
+        .expect(201);
+      expect(res.body.token).toBeUndefined();
+      const me = await http
+        .get('/api/auth/me')
+        .set(auth(tokenOf(res)))
+        .expect(200);
+      expect(me.body.email).toBe('cookie-reg@test.local');
+    });
+
+    it('sin cookie ni token responde 401; el encabezado Bearer sigue funcionando para otros clientes', async () => {
+      await http.get('/api/auth/me').expect(401);
+      await http.get('/api/auth/me').set({ Cookie: 'ps_session=token-roto' }).expect(401);
+      await http
+        .get('/api/auth/me')
+        .set({ Authorization: `Bearer ${adminToken}` })
+        .expect(200);
+    });
+
+    it('refresh renueva la sesión con una cookie nueva', async () => {
+      const res = await http.post('/api/auth/refresh').set(auth(adminToken)).expect(200);
+      expect(res.body.user.role).toBe('admin');
+      expect(cookiesOf(res).some((c) => c.startsWith('ps_session=') && /HttpOnly/i.test(c))).toBe(true);
+      await http.post('/api/auth/refresh').expect(401);
+    });
+
+    it('refresh falla y borra la cookie si la cuenta fue desactivada', async () => {
+      const reg = await http
+        .post('/api/auth/register')
+        .send({ name: 'Baja', email: 'baja@test.local', password: 'Secreta123' })
+        .expect(201);
+      const t = tokenOf(reg);
+      await http.patch(`/api/admin/users/${reg.body.user.id}`).set(auth(adminToken)).send({ active: false }).expect(200);
+      const res = await http.post('/api/auth/refresh').set(auth(t)).expect(401);
+      expect(cookiesOf(res).some((c) => /^ps_session=;/.test(c))).toBe(true);
+    });
+
+    it('logout borra la cookie', async () => {
+      const res = await http.post('/api/auth/logout').expect(200);
+      const cookie = cookiesOf(res).find((c) => c.startsWith('ps_session='))!;
+      expect(cookie).toMatch(/^ps_session=;/);
+      expect(cookie).toMatch(/Expires=Thu, 01 Jan 1970/);
     });
   });
 });

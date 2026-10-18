@@ -25,8 +25,8 @@ describe('AuthGuard', () => {
 
   const token = (role: Role, id = 1) => jwt.sign({ sub: id, email: `${role}@test.local`, role, name: role });
 
-  function ctx(cls: new () => object, handler: string, authorization?: string) {
-    const req: { headers: Record<string, string | undefined>; user?: unknown } = { headers: { authorization } };
+  function ctx(cls: new () => object, handler: string, authorization?: string, cookie?: string) {
+    const req: { headers: Record<string, string | undefined>; user?: unknown } = { headers: { authorization, cookie } };
     const context = {
       getHandler: () => (cls.prototype as Record<string, () => void>)[handler],
       getClass: () => cls,
@@ -107,5 +107,48 @@ describe('AuthGuard', () => {
     await expect(guard.canActivate(ctx(ClientController, 'override', `Bearer ${token(Role.CLIENT)}`).context)).rejects.toBeInstanceOf(
       ForbiddenException,
     );
+  });
+
+  describe('cookie de sesión', () => {
+    it('autentica con la cookie httpOnly', async () => {
+      const { context, req } = ctx(OpenController, 'adminOnly', undefined, `otra=1; ps_session=${token(Role.ADMIN, 3)}`);
+      await expect(guard.canActivate(context)).resolves.toBe(true);
+      expect(req.user).toMatchObject({ id: 3, role: Role.ADMIN });
+    });
+
+    it('aplica los roles también con cookie', async () => {
+      const { context } = ctx(OpenController, 'adminOnly', undefined, `ps_session=${token(Role.CLIENT)}`);
+      await expect(guard.canActivate(context)).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('rechaza una cookie inválida o vencida en rutas protegidas', async () => {
+      await expect(guard.canActivate(ctx(OpenController, 'protectedByLogin', undefined, 'ps_session=roto').context)).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+      const expired = jwt.sign({ sub: 1, role: Role.ADMIN }, { expiresIn: -10 });
+      await expect(
+        guard.canActivate(ctx(OpenController, 'protectedByLogin', undefined, `ps_session=${expired}`).context),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+    });
+
+    it('en rutas públicas una cookie válida adjunta el usuario y una inválida se ignora', async () => {
+      const ok = ctx(OpenController, 'open', undefined, `ps_session=${token(Role.CLIENT, 8)}`);
+      await expect(guard.canActivate(ok.context)).resolves.toBe(true);
+      expect(ok.req.user).toMatchObject({ id: 8 });
+      const bad = ctx(OpenController, 'open', undefined, 'ps_session=roto');
+      await expect(guard.canActivate(bad.context)).resolves.toBe(true);
+      expect(bad.req.user).toBeUndefined();
+    });
+
+    it('el encabezado Bearer tiene prioridad sobre la cookie', async () => {
+      const { context, req } = ctx(
+        OpenController,
+        'protectedByLogin',
+        `Bearer ${token(Role.ADMIN, 1)}`,
+        `ps_session=${token(Role.CLIENT, 2)}`,
+      );
+      await guard.canActivate(context);
+      expect(req.user).toMatchObject({ id: 1, role: Role.ADMIN });
+    });
   });
 });

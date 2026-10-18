@@ -46,7 +46,7 @@ function databaseConfig(config: ConfigService): TypeOrmModuleOptions {
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         secret: config.get('JWT_SECRET', 'dev-secret-cambiar'),
-        signOptions: { expiresIn: config.get('JWT_EXPIRES_IN', '7d') },
+        signOptions: { expiresIn: config.get('JWT_EXPIRES_IN', '2h') },
       }),
     }),
     ServeStaticModule.forRoot({ rootPath: resolve(UPLOAD_DIR), serveRoot: '/uploads', serveStaticOptions: { index: false } }),
