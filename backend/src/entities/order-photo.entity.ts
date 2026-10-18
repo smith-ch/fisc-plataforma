@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { PhotoStage } from '../common/enums';
 import { Order } from './order.entity';
 import { OrderUpdate } from './order-update.entity';
@@ -10,6 +10,7 @@ export class OrderPhoto {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @ManyToOne(() => Order, (o) => o.photos, { onDelete: 'CASCADE' })
   order: Order;
 

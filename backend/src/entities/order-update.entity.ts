@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Order } from './order.entity';
 import { User } from './user.entity';
 import { OrderPhoto } from './order-photo.entity';
@@ -9,6 +9,7 @@ export class OrderUpdate {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @ManyToOne(() => Order, (o) => o.updates, { onDelete: 'CASCADE' })
   order: Order;
 

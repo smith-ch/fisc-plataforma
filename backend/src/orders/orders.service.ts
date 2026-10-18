@@ -6,6 +6,7 @@ import { AuthUser } from '../common/current-user.decorator';
 import {
   DocumentType, ORDER_STATUS_LABELS, OrderSource, OrderStatus, PaymentMethod, PaymentRecordStatus, PaymentStatus, PhotoStage, Role,
 } from '../common/enums';
+import { PageQuery, parsePage, toPaged } from '../common/pagination';
 import { orderCode } from '../common/utils';
 import { ConcrebillService } from '../concrebill/concrebill.service';
 import {
@@ -128,12 +129,16 @@ export class OrdersService {
     });
   }
 
-  async listForStaff(user: AuthUser, filters: { status?: string; q?: string; technicianId?: string; source?: string }) {
+  async listForStaff(user: AuthUser, filters: { status?: string; q?: string; technicianId?: string; source?: string } & PageQuery) {
+    const { page, limit, skip } = parsePage(filters);
     const qb = this.orders.createQueryBuilder('o')
       .leftJoinAndSelect('o.items', 'items')
       .leftJoinAndSelect('o.technician', 'technician')
       .leftJoinAndSelect('o.client', 'client')
-      .orderBy('o.createdAt', 'DESC');
+      .orderBy('o.createdAt', 'DESC')
+      .addOrderBy('o.id', 'DESC')
+      .skip(skip)
+      .take(limit);
     if (user.role === Role.TECHNICIAN) qb.andWhere('technician.id = :tid', { tid: user.id });
     else if (filters.technicianId) qb.andWhere('technician.id = :tid', { tid: Number(filters.technicianId) });
     if (filters.status) qb.andWhere('o.status = :status', { status: filters.status });
@@ -142,7 +147,8 @@ export class OrdersService {
       qb.andWhere('(LOWER(o.contactName) LIKE :q OR LOWER(o.contactEmail) LIKE :q OR o.contactPhone LIKE :q OR LOWER(o.code) LIKE :q OR LOWER(o.address) LIKE :q)',
         { q: `%${filters.q.toLowerCase()}%` });
     }
-    return qb.getMany();
+    const [items, total] = await qb.getManyAndCount();
+    return toPaged(items, total, page, limit);
   }
 
   /** Seguimiento público con código + correo (para órdenes de invitados). */
@@ -305,12 +311,16 @@ export class OrdersService {
     return this.reviewPayment(payment.id, user, { status: PaymentRecordStatus.APPROVED, notes: dto.notes });
   }
 
-  listPayments(status?: string) {
-    return this.payments.find({
+  async listPayments(status?: string, paging: PageQuery = {}) {
+    const { page, limit, skip } = parsePage(paging);
+    const [items, total] = await this.payments.findAndCount({
       where: status ? { status: status as PaymentRecordStatus } : {},
       relations: { order: true },
-      order: { createdAt: 'DESC' },
+      order: { createdAt: 'DESC', id: 'DESC' },
+      skip,
+      take: limit,
     });
+    return toPaged(items, total, page, limit);
   }
 
   /**

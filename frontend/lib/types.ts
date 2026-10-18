@@ -62,6 +62,9 @@ export interface Settings {
 
 export interface SiteContent { settings: Settings; testimonials: Testimonial[]; faqs: Faq[]; projects: Project[] }
 
+/** Respuesta paginada de los listados del panel (órdenes, pagos, mensajes). */
+export interface Paged<T> { items: T[]; total: number; page: number; limit: number; pages: number }
+
 export interface Lead { id: number; name: string; phone: string; email: string | null; message: string; handled: boolean; createdAt: string }
 
 export interface DashboardData {

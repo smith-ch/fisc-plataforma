@@ -3,11 +3,12 @@
 import { Check, ExternalLink, Loader2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { Pager } from '@/components/admin/Pager';
 import { AdminTitle, Modal } from '@/components/admin/ui';
 import { Empty, PaymentBadge, Spinner } from '@/components/ui/bits';
 import { api } from '@/lib/api';
 import { date, money } from '@/lib/constants';
-import type { Payment } from '@/lib/types';
+import type { Paged, Payment } from '@/lib/types';
 import { useApi } from '@/lib/useApi';
 
 const TABS = [
@@ -16,7 +17,9 @@ const TABS = [
 
 export default function PaymentsPage() {
   const [status, setStatus] = useState('pendiente');
-  const { data: payments, loading, reload } = useApi<Payment[]>(`/admin/payments${status ? `?status=${status}` : ''}`);
+  const [page, setPage] = useState(1);
+  const { data, loading, reload } = useApi<Paged<Payment>>(`/admin/payments?page=${page}${status ? `&status=${status}` : ''}`);
+  const payments = data?.items;
   const [busy, setBusy] = useState<number | null>(null);
   const [rejecting, setRejecting] = useState<Payment | null>(null);
   const [notes, setNotes] = useState('');
@@ -40,7 +43,7 @@ export default function PaymentsPage() {
 
       <div className="mb-5 flex flex-wrap gap-1.5 rounded-xl bg-ink-900/5 p-1" style={{ width: 'fit-content' }}>
         {TABS.map((t) => (
-          <button key={t.value} onClick={() => setStatus(t.value)}
+          <button key={t.value} onClick={() => { setStatus(t.value); setPage(1); }}
             className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${status === t.value ? 'bg-paper shadow-sm' : 'text-ink-900/60 hover:text-ink-900'}`}>
             {t.label}
           </button>
@@ -78,6 +81,8 @@ export default function PaymentsPage() {
           ))}
         </div>
       )}
+
+      {data && <Pager data={data} onPage={setPage} />}
 
       <Modal open={!!rejecting} onClose={() => setRejecting(null)} title="Rechazar comprobante">
         <div className="space-y-3">

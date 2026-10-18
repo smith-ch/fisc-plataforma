@@ -143,4 +143,38 @@ describe('Órdenes (e2e)', () => {
     const created = await http.post('/api/orders').send(order('privada@test.local')).expect(201);
     await http.get('/api/orders/track').query({ code: created.body.code, email: 'otra@test.local' }).expect(404);
   });
+
+  it('los listados del panel responden paginados', async () => {
+    for (let n = 0; n < 3; n++)
+      await http
+        .post('/api/orders')
+        .send(order(`pag${n}@test.local`))
+        .expect(201);
+    await http.post('/api/leads').send({ name: 'Persona', phone: '8095550000', message: 'Hola, quiero información' }).expect(201);
+
+    const p1 = await http.get('/api/staff/orders').query({ page: 1, limit: 2 }).set(auth(adminToken)).expect(200);
+    expect(p1.body.items).toHaveLength(2);
+    expect(p1.body.total).toBeGreaterThanOrEqual(3);
+    expect(p1.body).toMatchObject({ page: 1, limit: 2 });
+    const p2 = await http.get('/api/staff/orders').query({ page: 2, limit: 2 }).set(auth(adminToken)).expect(200);
+    expect(p2.body.items.map((o: { id: number }) => o.id)).not.toEqual(
+      expect.arrayContaining(p1.body.items.map((o: { id: number }) => o.id)),
+    );
+
+    const payments = await http.get('/api/admin/payments').query({ status: 'pendiente', limit: 5 }).set(auth(adminToken)).expect(200);
+    expect(payments.body).toEqual(
+      expect.objectContaining({ items: expect.any(Array), total: expect.any(Number), pages: expect.any(Number) }),
+    );
+
+    const leads = await http.get('/api/admin/leads').query({ handled: 'false' }).set(auth(adminToken)).expect(200);
+    expect(leads.body.items.length).toBeGreaterThanOrEqual(1);
+    expect(leads.body.items.every((l: { handled: boolean }) => l.handled === false)).toBe(true);
+    const done = await http.get('/api/admin/leads').query({ handled: 'true' }).set(auth(adminToken)).expect(200);
+    expect(done.body.total).toBe(0);
+
+    // CRUD genérico: sin page/limit devuelve todo (array); con ellos, paginado
+    expect(Array.isArray((await http.get('/api/admin/faqs').set(auth(adminToken)).expect(200)).body)).toBe(true);
+    const faqs = await http.get('/api/admin/faqs').query({ page: 1, limit: 2 }).set(auth(adminToken)).expect(200);
+    expect(faqs.body.items.length).toBeLessThanOrEqual(2);
+  });
 });
