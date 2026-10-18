@@ -4,3 +4,6 @@ marketing/out/
 # env
 .env*
 !.env.example
+
+# fisc agentes
+.fisc/
