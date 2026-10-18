@@ -24,6 +24,8 @@ Abre **http://localhost:3000**
 
 - Panel administrativo: http://localhost:3000/admin
 - Usuario admin inicial: `admin@fisc.com.do` / `Admin123!` (cámbialo en `backend/.env` antes del primer arranque o desde el panel → Usuarios).
+- Calidad (en `backend/` y `frontend/`): `npm run lint` (ESLint, avisos no bloqueantes) y `npm run format` (Prettier, solo comprueba).
+- Pruebas del API (`backend/`): `npm test` (unitarias de `OrdersService` y `AuthGuard`) y `npm run test:e2e` (flujo orden → cotización → pago → validación sobre SQLite en memoria; no toca `data/` ni `uploads/`).
 - La base de datos SQLite se crea sola en `backend/data/` con el catálogo de los 3 pilares, textos de la landing y preguntas frecuentes.
 
 ## Qué incluye
