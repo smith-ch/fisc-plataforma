@@ -1,0 +1,36 @@
+# Publica y refresca en Discord (#tableros) el estado de los tableros de todos los proyectos.
+# Un solo mensaje que se edita en el lugar. Solo lee GitHub y escribe en el webhook del canal.
+# Secretos y variables: ver docs/TABLEROS-DISCORD.md.
+name: Tableros en Discord
+
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: tableros-discord
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TIENE_TOKEN: ${{ secrets.TABLEROS_TOKEN != '' && secrets.DISCORD_TABLEROS_WEBHOOK != '' }}
+    steps:
+      - name: Falta configurar los secretos
+        if: env.TIENE_TOKEN != 'true'
+        run: echo "::notice::Faltan los secretos TABLEROS_TOKEN y/o DISCORD_TABLEROS_WEBHOOK (ver docs/TABLEROS-DISCORD.md). No se publica nada."
+      - uses: actions/checkout@v4
+        if: env.TIENE_TOKEN == 'true'
+      - name: Actualizar el mensaje de #tableros
+        if: env.TIENE_TOKEN == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.TABLEROS_TOKEN }}
+          DISCORD_TABLEROS_WEBHOOK: ${{ secrets.DISCORD_TABLEROS_WEBHOOK }}
+          DISCORD_TABLEROS_MESSAGE_ID: ${{ vars.DISCORD_TABLEROS_MESSAGE_ID }}
+        run: node scripts/discord-tableros.mjs
