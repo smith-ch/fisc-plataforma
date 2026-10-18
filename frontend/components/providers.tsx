@@ -1,29 +1,10 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { api, hasSessionHint, setSessionHint } from '@/lib/api';
-import type { Service, User } from '@/lib/types';
-
-// ---------------- Autenticación ----------------
-
-interface AuthCtx {
-  user: User | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<User>;
-  register: (data: Record<string, string>) => Promise<User>;
-  logout: () => void;
-  refresh: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthCtx | null>(null);
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth fuera de AuthProvider');
-  return ctx;
-}
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import type { Service } from '@/lib/types';
 
 // ---------------- Carrito de servicios ----------------
+// Vive solo en el navegador (localStorage). Al enviar la solicitud se arma un mensaje de WhatsApp; no hay servidor.
 
 export interface CartItem { serviceId: number; name: string; slug: string; icon: string | null; quantity: number; notes: string }
 
@@ -42,55 +23,30 @@ const CartContext = createContext<CartCtx | null>(null);
 
 export function useCart() {
   const ctx = useContext(CartContext);
-  if (!ctx) throw new Error('useCart fuera de CartProvider');
+  if (!ctx) throw new Error('useCart fuera de Providers');
   return ctx;
 }
 
-const CART_KEY = 'ps_cart';
+const CART_KEY = 'fisc_cart_v2';
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<CartItem[]>([]);
   const [open, setOpen] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
-  const refresh = useCallback(async () => {
-    if (!hasSessionHint()) { setUser(null); setLoading(false); return; }
-    try { setUser(await api<User>('/auth/me')); } catch { setUser(null); } finally { setLoading(false); }
+  // Se lee el carrito guardado una sola vez, después de montar (así el HTML del servidor y el primero del cliente coinciden).
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+      if (Array.isArray(saved)) setItems(saved.filter((i) => i && typeof i.serviceId === 'number' && typeof i.name === 'string'));
+    } catch { /* carrito vacío */ }
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
-    refresh();
-    try { setItems(JSON.parse(localStorage.getItem(CART_KEY) || '[]')); } catch { /* vacío */ }
-  }, [refresh]);
-
-  // Mientras haya sesión se renueva la cookie (el JWT dura poco) cada 30 min y al volver a la pestaña.
-  const signedIn = !!user;
-  useEffect(() => {
-    if (!signedIn) return;
-    const renew = () => api<{ user: User }>('/auth/refresh', { method: 'POST' }).then((r) => setUser(r.user)).catch(() => { setSessionHint(false); setUser(null); });
-    const onVisible = () => { if (document.visibilityState === 'visible') renew(); };
-    const timer = setInterval(renew, 30 * 60 * 1000);
-    document.addEventListener('visibilitychange', onVisible);
-    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', onVisible); };
-  }, [signedIn]);
-
-  useEffect(() => {
+    if (!hydrated) return;
     try { localStorage.setItem(CART_KEY, JSON.stringify(items)); } catch { /* sin almacenamiento */ }
-  }, [items]);
-
-  const auth = useMemo<AuthCtx>(() => ({
-    user, loading, refresh,
-    login: async (email, password) => {
-      const res = await api<{ user: User }>('/auth/login', { body: { email, password } });
-      setSessionHint(true); setUser(res.user); return res.user;
-    },
-    register: async (data) => {
-      const res = await api<{ user: User }>('/auth/register', { body: data });
-      setSessionHint(true); setUser(res.user); return res.user;
-    },
-    logout: () => { setSessionHint(false); setUser(null); api('/auth/logout', { method: 'POST' }).catch(() => { /* la cookie vence sola */ }); },
-  }), [user, loading, refresh]);
+  }, [items, hydrated]);
 
   const cart = useMemo<CartCtx>(() => ({
     items, open, setOpen,
@@ -102,9 +58,5 @@ export function Providers({ children }: { children: React.ReactNode }) {
     clear: () => setItems([]),
   }), [items, open]);
 
-  return (
-    <AuthContext.Provider value={auth}>
-      <CartContext.Provider value={cart}>{children}</CartContext.Provider>
-    </AuthContext.Provider>
-  );
+  return <CartContext.Provider value={cart}>{children}</CartContext.Provider>;
 }

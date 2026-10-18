@@ -1,11 +1,11 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
-import { LogIn, Menu, ShoppingBag, UserRound, X } from 'lucide-react';
+import { Menu, ShoppingBag, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useAuth, useCart } from '@/components/providers';
+import { useCart } from '@/components/providers';
 import { ThemeToggle } from '@/components/theme';
 import type { Settings } from '@/lib/types';
 import { Logo } from './Logo';
@@ -16,12 +16,10 @@ const NAV = [
   { href: '/#trabajos', label: 'Trabajos' },
   { href: '/#faq', label: 'Preguntas' },
   { href: '/#contacto', label: 'Contacto' },
-  { href: '/seguimiento', label: 'Seguimiento' },
 ];
 
 export function Header({ brand }: { brand: Settings['brand'] }) {
   const pathname = usePathname();
-  const { user } = useAuth();
   const cart = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [mobile, setMobile] = useState(false);
@@ -36,7 +34,6 @@ export function Header({ brand }: { brand: Settings['brand'] }) {
 
   // En la portada el header arranca transparente sobre el hero
   const bare = pathname === '/' && !scrolled;
-  const account = user ? (user.role === 'client' ? '/mi-cuenta' : '/admin') : '/login';
 
   return (
     <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${bare ? 'py-5' : 'py-3'}`}>
@@ -63,11 +60,6 @@ export function Header({ brand }: { brand: Settings['brand'] }) {
                 </span>
               )}
             </button>
-            <Link href={account} aria-label="Mi cuenta"
-              className="hidden h-10 items-center gap-2 rounded-full px-3 text-sm font-medium transition hover:bg-ink-900/5 sm:flex">
-              {user ? <UserRound className="h-4.5 w-4.5" /> : <LogIn className="h-4.5 w-4.5" />}
-              <span>{user ? user.name.split(' ')[0] : 'Ingresar'}</span>
-            </Link>
             <Link href="/solicitar" className="btn-primary hidden whitespace-nowrap md:inline-flex">Solicitar servicio</Link>
             <button onClick={() => setMobile((v) => !v)} aria-label="Menú"
               className="grid h-10 w-10 place-items-center rounded-full lg:hidden">
@@ -80,7 +72,6 @@ export function Header({ brand }: { brand: Settings['brand'] }) {
             <motion.nav initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
               className="mt-2 grid gap-1 rounded-3xl border border-ink-900/10 bg-paper p-3 shadow-xl lg:hidden">
               {NAV.map((n) => <Link key={n.href} href={n.href} className="rounded-xl px-4 py-3 font-medium hover:bg-sand-100">{n.label}</Link>)}
-              <Link href={account} className="rounded-xl px-4 py-3 font-medium hover:bg-sand-100">{user ? 'Mi cuenta' : 'Ingresar / Registrarse'}</Link>
               <Link href="/solicitar" className="btn-primary mt-1">Solicitar servicio</Link>
             </motion.nav>
           )}

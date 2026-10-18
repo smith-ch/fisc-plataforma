@@ -5,7 +5,7 @@ const compat = new FlatCompat({ baseDirectory: import.meta.dirname });
 
 // Reglas en "warn": el código existente no se reescribe, el linter solo avisa.
 const config = [
-  { ignores: ['postcss.config.mjs', '.next/**', 'node_modules/**', 'next-env.d.ts'] },
+  { ignores: ['postcss.config.mjs', '.next/**', 'node_modules/**', 'next-env.d.ts', 'legacy/**'] },
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
     rules: {
