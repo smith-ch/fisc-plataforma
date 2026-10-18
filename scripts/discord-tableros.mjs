@@ -85,6 +85,11 @@ for (const p of PROYECTOS) {
     embeds.push(embed(p, null, e.message.slice(0, 200)));
   }
 }
+// Si no se pudo leer ningún tablero (token vencido o sin permisos) no se toca el mensaje: se conserva el último bueno.
+if (fallos === PROYECTOS.length) {
+  console.error('No se pudo leer ningún tablero; el mensaje de Discord queda como estaba. Revisa TABLEROS_TOKEN.');
+  process.exit(1);
+}
 const ahora = new Date().toISOString().replace('T', ' ').slice(0, 16);
 embeds[embeds.length - 1].footer = { text: `Actualizado ${ahora} UTC · se refresca solo cada hora` };
 

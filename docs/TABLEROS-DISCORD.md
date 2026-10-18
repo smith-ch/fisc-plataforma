@@ -28,5 +28,6 @@ Edita la lista `PROYECTOS` al inicio de `scripts/discord-tableros.mjs` (dueño, 
 ## Si algo falla
 
 - Una tarjeta en rojo con "No se pudo leer el tablero": el token no tiene acceso a ese tablero o repo, o venció.
-- El workflow termina con error cuando alguna tarjeta falló, pero igual publica las demás.
+- Mientras falten los secretos, el workflow termina en verde sin publicar nada y deja un aviso en el resumen.
+- Si una tarjeta falla, el workflow termina con error pero igual publica las demás. Si fallan todas, no toca el mensaje y conserva el último bueno.
 - Si borran el mensaje en Discord, el script crea uno nuevo y vuelve a mostrar su id en el resumen: actualiza la variable.

@@ -19,9 +19,16 @@ jobs:
   publicar:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      TIENE_TOKEN: ${{ secrets.TABLEROS_TOKEN != '' && secrets.DISCORD_TABLEROS_WEBHOOK != '' }}
     steps:
+      - name: Falta configurar los secretos
+        if: env.TIENE_TOKEN != 'true'
+        run: echo "::notice::Faltan los secretos TABLEROS_TOKEN y/o DISCORD_TABLEROS_WEBHOOK (ver docs/TABLEROS-DISCORD.md). No se publica nada."
       - uses: actions/checkout@v4
+        if: env.TIENE_TOKEN == 'true'
       - name: Actualizar el mensaje de #tableros
+        if: env.TIENE_TOKEN == 'true'
         env:
           GH_TOKEN: ${{ secrets.TABLEROS_TOKEN }}
           DISCORD_TABLEROS_WEBHOOK: ${{ secrets.DISCORD_TABLEROS_WEBHOOK }}
