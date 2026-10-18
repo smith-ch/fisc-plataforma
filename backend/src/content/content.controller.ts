@@ -1,8 +1,9 @@
-import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Put } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Put, Query } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { Repository } from 'typeorm';
 import { Role } from '../common/enums';
+import { parsePage, toPaged } from '../common/pagination';
 import { Public, Roles } from '../common/roles.decorator';
 import { Faq, Lead, Project, Review, SiteSetting, Testimonial } from '../entities';
 import { SETTING_KEYS } from './settings.defaults';
@@ -63,8 +64,15 @@ export class ContentController {
   }
 
   @Roles(Role.ADMIN) @Get('admin/leads')
-  listLeads() {
-    return this.leads.find({ order: { createdAt: 'DESC' } });
+  async listLeads(@Query('handled') handled?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
+    const p = parsePage({ page, limit });
+    const [items, total] = await this.leads.findAndCount({
+      where: handled === 'true' || handled === 'false' ? { handled: handled === 'true' } : {},
+      order: { createdAt: 'DESC', id: 'DESC' },
+      skip: p.skip,
+      take: p.limit,
+    });
+    return toPaged(items, total, p.page, p.limit);
   }
 
   @Roles(Role.ADMIN) @Patch('admin/leads/:id')

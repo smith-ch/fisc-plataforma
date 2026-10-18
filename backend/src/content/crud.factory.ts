@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Patch, Post, Type } from '@nestjs/common';
+import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Patch, Post, Query, Type } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ObjectLiteral, Repository } from 'typeorm';
 import { Role } from '../common/enums';
+import { parsePage, toPaged } from '../common/pagination';
 import { Roles } from '../common/roles.decorator';
 
 const PROTECTED = ['id', 'createdAt', 'updatedAt'];
@@ -21,8 +22,13 @@ export function createCrudController<T extends ObjectLiteral>(path: string, enti
     constructor(@InjectRepository(entity) readonly repo: Repository<T>) {}
 
     @Get()
-    list() {
-      return this.repo.find({ order: { sortOrder: 'ASC', id: 'DESC' } as never });
+    async list(@Query('page') page?: string, @Query('limit') limit?: string) {
+      const order = { sortOrder: 'ASC', id: 'DESC' } as never;
+      // Sin page/limit devuelve todo (listas cortas del panel); con ellos, paginado.
+      if (page === undefined && limit === undefined) return this.repo.find({ order });
+      const p = parsePage({ page, limit });
+      const [items, total] = await this.repo.findAndCount({ order, skip: p.skip, take: p.limit });
+      return toPaged(items, total, p.page, p.limit);
     }
 
     @Post()

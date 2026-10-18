@@ -1,43 +1,43 @@
 'use client';
 
 import { Check, Mail, MessageCircle, Phone } from 'lucide-react';
+import { useState } from 'react';
+import { Pager } from '@/components/admin/Pager';
 import { AdminTitle } from '@/components/admin/ui';
 import { Empty, Spinner } from '@/components/ui/bits';
 import { api } from '@/lib/api';
 import { date, waLink } from '@/lib/constants';
-import type { Lead } from '@/lib/types';
+import type { Lead, Paged } from '@/lib/types';
 import { useApi } from '@/lib/useApi';
 
 export default function LeadsPage() {
-  const { data: leads, loading, reload } = useApi<Lead[]>('/admin/leads');
+  const [handledTab, setHandledTab] = useState(false);
+  const [page, setPage] = useState(1);
+  const { data, loading, reload } = useApi<Paged<Lead>>(`/admin/leads?handled=${handledTab}&page=${page}`);
+  const leads = data?.items;
 
   async function toggle(lead: Lead) {
     try { await api(`/admin/leads/${lead.id}`, { method: 'PATCH', body: { handled: !lead.handled } }); reload(); } catch { /* noop */ }
   }
 
-  const pending = (leads ?? []).filter((l) => !l.handled);
-  const handled = (leads ?? []).filter((l) => l.handled);
 
   return (
     <div>
       <AdminTitle title="Mensajes" subtitle="Solicitudes de contacto dejadas desde la landing (formulario rápido)." />
 
-      {loading && !leads ? <Spinner /> : !leads?.length ? <Empty>No hay mensajes todavía.</Empty> : (
-        <div className="space-y-8">
-          <div>
-            <p className="mb-3 text-xs font-semibold tracking-wide text-ink-900/50 uppercase">Pendientes · {pending.length}</p>
-            {!pending.length ? <Empty>Nada pendiente — al día.</Empty> : (
-              <div className="grid gap-3">{pending.map((l) => <LeadCard key={l.id} lead={l} onToggle={toggle} />)}</div>
-            )}
-          </div>
-          {handled.length > 0 && (
-            <div>
-              <p className="mb-3 text-xs font-semibold tracking-wide text-ink-900/50 uppercase">Atendidos · {handled.length}</p>
-              <div className="grid gap-3">{handled.map((l) => <LeadCard key={l.id} lead={l} onToggle={toggle} />)}</div>
-            </div>
-          )}
-        </div>
+      <div className="mb-5 flex gap-1.5 rounded-xl bg-ink-900/5 p-1" style={{ width: 'fit-content' }}>
+        {[{ value: false, label: 'Pendientes' }, { value: true, label: 'Atendidos' }].map((t) => (
+          <button key={String(t.value)} onClick={() => { setHandledTab(t.value); setPage(1); }}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${handledTab === t.value ? 'bg-paper shadow-sm' : 'text-ink-900/60 hover:text-ink-900'}`}>
+            {t.label}{data && handledTab === t.value ? ` · ${data.total}` : ''}
+          </button>
+        ))}
+      </div>
+
+      {loading && !leads ? <Spinner /> : !leads?.length ? <Empty>{handledTab ? 'No hay mensajes atendidos.' : 'Nada pendiente — al día.'}</Empty> : (
+        <div className="grid gap-3">{leads.map((l) => <LeadCard key={l.id} lead={l} onToggle={toggle} />)}</div>
       )}
+      {data && <Pager data={data} onPage={setPage} />}
     </div>
   );
 }

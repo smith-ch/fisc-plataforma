@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { PaymentMethod, PaymentRecordStatus } from '../common/enums';
 import { Order } from './order.entity';
 import { BillingDocument } from './document.entity';
@@ -9,6 +9,7 @@ export class Payment {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @ManyToOne(() => Order, (o) => o.payments, { onDelete: 'CASCADE' })
   order: Order;
 
@@ -31,6 +32,7 @@ export class Payment {
   @Column({ type: 'varchar', length: 500, nullable: true })
   receiptUrl: string | null;
 
+  @Index()
   @Column({ type: 'varchar', length: 20, default: PaymentRecordStatus.PENDING })
   status: PaymentRecordStatus;
 
@@ -47,6 +49,7 @@ export class Payment {
   @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   reviewedBy: User | null;
 
+  @Index()
   @CreateDateColumn()
   createdAt: Date;
 }

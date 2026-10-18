@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Order } from './order.entity';
 import { ServiceItem } from './service.entity';
 
@@ -7,6 +7,7 @@ export class OrderItem {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @ManyToOne(() => Order, (o) => o.items, { onDelete: 'CASCADE' })
   order: Order;
 

@@ -3,10 +3,11 @@
 import { Search } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { Pager } from '@/components/admin/Pager';
 import { AdminTitle } from '@/components/admin/ui';
 import { Empty, PaymentBadge, Spinner, StatusBadge } from '@/components/ui/bits';
 import { SOURCES, STATUS, STATUS_FLOW, date } from '@/lib/constants';
-import type { OrderStatus, User } from '@/lib/types';
+import type { OrderStatus, Paged, User } from '@/lib/types';
 import { useApi } from '@/lib/useApi';
 
 type OrderRow = {
@@ -19,16 +20,22 @@ export default function OrdersListPage() {
   const [technicianId, setTechnicianId] = useState('');
   const [qInput, setQInput] = useState('');
   const [q, setQ] = useState('');
+  const [page, setPage] = useState(1);
   useEffect(() => { const t = setTimeout(() => setQ(qInput.trim()), 300); return () => clearTimeout(t); }, [qInput]);
 
   const { data: technicians } = useApi<User[]>('/admin/users?role=technician');
 
+  // Al cambiar un filtro se vuelve a la primera página
+  useEffect(() => { setPage(1); }, [status, technicianId, q]);
+
   const params = new URLSearchParams();
+  params.set('page', String(page));
   if (status) params.set('status', status);
   if (technicianId) params.set('technicianId', technicianId);
   if (q) params.set('q', q);
   const query = params.toString();
-  const { data: orders, loading } = useApi<OrderRow[]>(`/staff/orders${query ? `?${query}` : ''}`);
+  const { data, loading } = useApi<Paged<OrderRow>>(`/staff/orders?${query}`);
+  const orders = data?.items;
 
   return (
     <div>
@@ -65,6 +72,7 @@ export default function OrdersListPage() {
           ))}
         </div>
       )}
+      {data && <Pager data={data} onPage={setPage} />}
     </div>
   );
 }

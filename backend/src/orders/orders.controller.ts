@@ -56,7 +56,7 @@ export class StaffOrdersController {
   constructor(private readonly orders: OrdersService) {}
 
   @Roles(Role.ADMIN, Role.TECHNICIAN) @Get('staff/orders')
-  list(@CurrentUser() user: AuthUser, @Query() q: { status?: string; q?: string; technicianId?: string; source?: string }) {
+  list(@CurrentUser() user: AuthUser, @Query() q: { status?: string; q?: string; technicianId?: string; source?: string; page?: string; limit?: string }) {
     return this.orders.listForStaff(user, q);
   }
 
@@ -121,8 +121,8 @@ export class StaffOrdersController {
   }
 
   @Roles(Role.ADMIN) @Get('admin/payments')
-  payments(@Query('status') status?: string) {
-    return this.orders.listPayments(status);
+  payments(@Query('status') status?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.orders.listPayments(status, { page, limit });
   }
 
   @Roles(Role.ADMIN) @Patch('admin/payments/:id')

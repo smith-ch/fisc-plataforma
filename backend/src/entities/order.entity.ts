@@ -1,5 +1,5 @@
 import {
-  Column, CreateDateColumn, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn,
+  Column, CreateDateColumn, Entity, Index, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn,
 } from 'typeorm';
 import { OrderSource, OrderStatus, PaymentStatus } from '../common/enums';
 import { User } from './user.entity';
@@ -18,6 +18,7 @@ export class Order {
   @Column({ type: 'varchar', length: 20, unique: true, nullable: true })
   code: string | null;
 
+  @Index()
   @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   client: User | null;
 
@@ -25,6 +26,7 @@ export class Order {
   @Column({ type: 'varchar', length: 120 })
   contactName: string;
 
+  @Index()
   @Column({ type: 'varchar', length: 160 })
   contactEmail: string;
 
@@ -66,9 +68,11 @@ export class Order {
   @Column({ type: 'varchar', length: 20, default: OrderSource.WEB })
   source: OrderSource;
 
+  @Index()
   @Column({ type: 'varchar', length: 30, default: OrderStatus.RECEIVED })
   status: OrderStatus;
 
+  @Index()
   @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   technician: User | null;
 
@@ -110,6 +114,7 @@ export class Order {
   @OneToOne(() => Review, (r) => r.order)
   review: Review | null;
 
+  @Index()
   @CreateDateColumn()
   createdAt: Date;
 

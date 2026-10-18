@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { DocumentType } from '../common/enums';
 import { Order } from './order.entity';
 
@@ -11,6 +11,7 @@ export class BillingDocument {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @ManyToOne(() => Order, (o) => o.documents, { onDelete: 'CASCADE' })
   order: Order;
 

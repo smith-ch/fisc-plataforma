@@ -1,7 +1,7 @@
 import { BadGatewayException, BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { AuthUser } from '../common/current-user.decorator';
-import { DocumentType, OrderSource, OrderStatus, PaymentMethod, PaymentRecordStatus, PaymentStatus, Role } from '../common/enums';
+import { DocumentType, OrderSource, OrderStatus, PaymentMethod, PaymentRecordStatus, PaymentStatus } from '../common/enums';
 import { BillingDocument, Order, OrderPhoto, OrderUpdate, Payment, Review, ServiceItem, User } from '../entities';
 import { createTestDataSource, Fixtures, seedFixtures } from '../../test/helpers/db';
 import { CreateOrderDto } from './orders.dto';
@@ -370,15 +370,49 @@ describe('OrdersService', () => {
     });
   });
 
-  it('listForStaff: el técnico solo ve sus órdenes y los filtros aplican', async () => {
-    const a = await service.create(dto());
-    const b = await service.create(dto({ contactName: 'Zoila Buscada' }));
-    await service.update(a.id, { technicianId: fx.tech.id }, asUser(fx.admin));
-    await setStatus(b.id, OrderStatus.SURVEY);
-    expect((await service.listForStaff(asUser(fx.tech), {})).map((o) => o.id)).toEqual([a.id]);
-    expect(await service.listForStaff(asUser(fx.admin), {})).toHaveLength(2);
-    expect((await service.listForStaff(asUser(fx.admin), { status: OrderStatus.SURVEY })).map((o) => o.id)).toEqual([b.id]);
-    expect((await service.listForStaff(asUser(fx.admin), { q: 'zoila' })).map((o) => o.id)).toEqual([b.id]);
-    expect(Role.TECHNICIAN).toBe(fx.tech.role);
+  describe('listados paginados', () => {
+    const ids = (r: { items: { id: number }[] }) => r.items.map((o) => o.id);
+
+    it('listForStaff: el técnico solo ve sus órdenes y los filtros aplican', async () => {
+      const a = await service.create(dto());
+      const b = await service.create(dto({ contactName: 'Zoila Buscada' }));
+      await service.update(a.id, { technicianId: fx.tech.id }, asUser(fx.admin));
+      await setStatus(b.id, OrderStatus.SURVEY);
+      expect(ids(await service.listForStaff(asUser(fx.tech), {}))).toEqual([a.id]);
+      expect((await service.listForStaff(asUser(fx.admin), {})).total).toBe(2);
+      expect(ids(await service.listForStaff(asUser(fx.admin), { status: OrderStatus.SURVEY }))).toEqual([b.id]);
+      expect(ids(await service.listForStaff(asUser(fx.admin), { q: 'zoila' }))).toEqual([b.id]);
+    });
+
+    it('listForStaff pagina, ordena de más nueva a más antigua y devuelve el total', async () => {
+      const created: number[] = [];
+      for (let i = 0; i < 5; i++)
+        created.push((await service.create(dto({ items: [{ serviceId: fx.service.id }, { serviceId: fx.service2.id }] }))).id);
+      const p1 = await service.listForStaff(asUser(fx.admin), { page: '1', limit: '2' });
+      const p2 = await service.listForStaff(asUser(fx.admin), { page: '2', limit: '2' });
+      const p3 = await service.listForStaff(asUser(fx.admin), { page: '3', limit: '2' });
+      expect([p1.total, p1.pages, p1.page, p1.limit]).toEqual([5, 3, 1, 2]);
+      expect([...ids(p1), ...ids(p2), ...ids(p3)]).toEqual([...created].reverse());
+      expect(p1.items[0].items).toHaveLength(2); // con joins, la página cuenta órdenes y no filas
+      expect(ids(await service.listForStaff(asUser(fx.admin), { page: '9', limit: '2' }))).toEqual([]);
+    });
+
+    it('listForStaff aplica los filtros antes de paginar y normaliza page/limit inválidos', async () => {
+      for (let i = 0; i < 3; i++) await service.create(dto());
+      const r = await service.listForStaff(asUser(fx.admin), { page: '-4', limit: 'abc' });
+      expect([r.page, r.limit, r.total]).toEqual([1, 20, 3]);
+      expect((await service.listForStaff(asUser(fx.admin), { limit: '100000' })).limit).toBe(100);
+      expect((await service.listForStaff(asUser(fx.admin), { status: OrderStatus.CANCELLED, page: '1', limit: '2' })).total).toBe(0);
+    });
+
+    it('listPayments pagina y filtra por estado', async () => {
+      const { id } = await service.create(dto(), asUser(fx.client));
+      for (let i = 0; i < 3; i++) await service.clientPayment(id, asUser(fx.client), { amount: 100 + i }, '/uploads/receipts/c.jpg');
+      const all = await service.listPayments(undefined, { page: '1', limit: '2' });
+      expect([all.items.length, all.total, all.pages]).toEqual([2, 3, 2]);
+      expect(all.items.map((p) => Number(p.amount))).toEqual([102, 101]);
+      expect((await service.listPayments('pendiente', { page: '2', limit: '2' })).items).toHaveLength(1);
+      expect((await service.listPayments('validado')).total).toBe(0);
+    });
   });
 });

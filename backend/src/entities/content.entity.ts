@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 /** Bloques de configuración editables desde el panel (marca, hero, contacto, ...). */
 @Entity('site_settings')
@@ -107,9 +107,11 @@ export class Lead {
   @Column({ type: 'text' })
   message: string;
 
+  @Index()
   @Column({ type: 'boolean', default: false })
   handled: boolean;
 
+  @Index()
   @CreateDateColumn()
   createdAt: Date;
 }
