@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 import {
   ArrayMinSize, IsArray, IsBoolean, IsEmail, IsEnum, IsIn, IsInt, IsNumber, IsOptional, IsString, Matches, Max, MaxLength,
@@ -92,6 +93,16 @@ export class ReviewPaymentDto {
   @IsOptional() @IsString() @MaxLength(1000) notes?: string;
 }
 
+/** Filtros y paginación de `GET /staff/orders`. */
+export class StaffOrdersQueryDto {
+  @IsOptional() @IsEnum(OrderStatus) status?: OrderStatus;
+  @IsOptional() @IsString() @MaxLength(100) q?: string;
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) technicianId?: number;
+  @IsOptional() @IsEnum(OrderSource) source?: OrderSource;
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) page?: number;
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) limit?: number;
+}
+
 export class DocumentDto {
   @IsEnum(DocumentType) type: DocumentType;
   @IsString() @MinLength(1) @MaxLength(60) number: string;
@@ -103,3 +114,6 @@ export class DocumentDto {
   @IsOptional() @IsString() dueDate?: string;
   @IsOptional() @IsString() fileUrl?: string;
 }
+
+/** `PATCH`: los mismos campos y reglas que `DocumentDto`, todos opcionales (un tipo genérico se borra en runtime y no validaría nada). */
+export class UpdateDocumentDto extends PartialType(DocumentDto) {}

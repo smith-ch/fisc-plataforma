@@ -177,4 +177,85 @@ describe('Órdenes (e2e)', () => {
     const faqs = await http.get('/api/admin/faqs').query({ page: 1, limit: 2 }).set(auth(adminToken)).expect(200);
     expect(faqs.body.items.length).toBeLessThanOrEqual(2);
   });
+
+  describe('validación de entradas y acceso (#10)', () => {
+    let id: number;
+    let docId: number;
+    let clientToken: string;
+
+    beforeAll(async () => {
+      const created = await http.post('/api/orders').send(order('val@test.local')).expect(201);
+      id = created.body.id;
+      clientToken = (
+        await http.post('/api/auth/register').send({ name: 'Cliente Val', email: 'val@test.local', password: 'Secreta123' }).expect(201)
+      ).body.token;
+      const doc = await http
+        .post(`/api/admin/orders/${id}/documents`)
+        .set(auth(adminToken))
+        .send({ type: 'factura', number: 'F-VAL-1', amount: 100 })
+        .expect(201);
+      docId = doc.body.id;
+    });
+
+    it('PATCH /admin/documents/:id valida el cuerpo y no permite asignación masiva', async () => {
+      await http.patch(`/api/admin/documents/${docId}`).set(auth(adminToken)).send({ amount: 'mucho' }).expect(400);
+      await http.patch(`/api/admin/documents/${docId}`).set(auth(adminToken)).send({ type: 'otra-cosa' }).expect(400);
+      const ok = await http
+        .patch(`/api/admin/documents/${docId}`)
+        .set(auth(adminToken))
+        .send({ status: 'aprobada', origin: 'concrebill', id: 999, concrebillId: 'X-1' })
+        .expect(200);
+      expect(ok.body.status).toBe('aprobada');
+      expect(ok.body.id).toBe(docId);
+      expect(ok.body.origin).toBe('manual');
+    });
+
+    it('GET /staff/orders rechaza filtros inválidos', async () => {
+      await http.get('/api/staff/orders').query({ status: 'inventado' }).set(auth(adminToken)).expect(400);
+      await http.get('/api/staff/orders').query({ page: 0 }).set(auth(adminToken)).expect(400);
+      await http.get('/api/staff/orders').query({ technicianId: 'abc' }).set(auth(adminToken)).expect(400);
+      await http.get('/api/staff/orders').query({ status: 'recibida' }).set(auth(adminToken)).expect(200);
+    });
+
+    it('PATCH /admin/leads/:id exige un booleano', async () => {
+      const lead = await http.post('/api/leads').send({ name: 'Persona', phone: '8095550000', message: 'Mensaje de prueba' }).expect(201);
+      expect(lead.body).toEqual({ ok: true });
+      const list = await http.get('/api/admin/leads').set(auth(adminToken)).expect(200);
+      const leadId = list.body.items[0].id;
+      await http.patch(`/api/admin/leads/${leadId}`).set(auth(adminToken)).send({ handled: 'si' }).expect(400);
+      await http.patch(`/api/admin/leads/${leadId}`).set(auth(adminToken)).send({}).expect(400);
+      const done = await http.patch(`/api/admin/leads/${leadId}`).set(auth(adminToken)).send({ handled: true }).expect(200);
+      expect(done.body.handled).toBe(true);
+    });
+
+    it('PUT /admin/settings/:key rechaza lo que no es un objeto o tiene tipos erróneos y descarta campos desconocidos', async () => {
+      await http.put('/api/admin/settings/brand').set(auth(adminToken)).send([1, 2]).expect(400);
+      await http.put('/api/admin/settings/brand').set(auth(adminToken)).send({ name: 42 }).expect(400);
+      await http.put('/api/admin/settings/nada').set(auth(adminToken)).send({}).expect(400);
+      const ok = await http
+        .put('/api/admin/settings/brand')
+        .set(auth(adminToken))
+        .send({ name: 'F.I.S.C. Test', intruso: 'x' })
+        .expect(200);
+      expect(ok.body).toEqual({ name: 'F.I.S.C. Test' });
+    });
+
+    it('un cliente no puede asociar su pago a un documento de otra orden', async () => {
+      const other = await http.post('/api/orders').send(order('otra-orden@test.local')).expect(201);
+      const foreign = await http
+        .post(`/api/admin/orders/${other.body.id}/documents`)
+        .set(auth(adminToken))
+        .send({ type: 'factura', number: 'F-AJENA', amount: 100 })
+        .expect(201);
+      const pay = (documentId: number) =>
+        http
+          .post(`/api/my/orders/${id}/payments`)
+          .set(auth(clientToken))
+          .field('amount', '100')
+          .field('documentId', String(documentId))
+          .attach('receipt', Buffer.from('x'), { filename: 'c.pdf', contentType: 'application/pdf' });
+      await pay(foreign.body.id).expect(400);
+      await pay(docId).expect(201);
+    });
+  });
 });
