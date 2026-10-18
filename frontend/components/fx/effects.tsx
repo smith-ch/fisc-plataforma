@@ -1,27 +1,38 @@
 'use client';
 
-import Lenis from 'lenis';
 import { motion, useInView, useMotionValue, useScroll, useSpring, useTransform } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
+import { isLowPowerDevice } from '@/lib/perf';
 
 /** Scroll suave (inercia) para toda la web pública. */
 export function SmoothScroll() {
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
-    let raf = 0;
-    const loop = (time: number) => { lenis.raf(time); raf = requestAnimationFrame(loop); };
-    raf = requestAnimationFrame(loop);
-    // Anclas internas (#servicios, #proceso ...) con desplazamiento suave
-    const onClick = (e: MouseEvent) => {
-      const a = (e.target as HTMLElement).closest('a[href^="/#"], a[href^="#"]') as HTMLAnchorElement | null;
-      if (!a || location.pathname !== '/') return;
-      const id = a.getAttribute('href')!.split('#')[1];
-      const el = id && document.getElementById(id);
-      if (el) { e.preventDefault(); lenis.scrollTo(el, { offset: -70 }); history.replaceState(null, '', `#${id}`); }
-    };
-    document.addEventListener('click', onClick);
-    return () => { cancelAnimationFrame(raf); lenis.destroy(); document.removeEventListener('click', onClick); };
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || isLowPowerDevice()) return;
+    let disposed = false;
+    let cleanup = () => {};
+    // Lenis se descarga aparte, después de la carga inicial, y solo en equipos que lo aprovechan.
+    import('lenis').then(({ default: Lenis }) => {
+      if (disposed) return;
+      const lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
+      let raf = 0;
+      const loop = (time: number) => { lenis.raf(time); raf = requestAnimationFrame(loop); };
+      const start = () => { if (!raf) raf = requestAnimationFrame(loop); };
+      const stop = () => { cancelAnimationFrame(raf); raf = 0; };
+      const onVisibility = () => (document.hidden ? stop() : start());
+      start();
+      document.addEventListener('visibilitychange', onVisibility);
+      // Anclas internas (#servicios, #proceso ...) con desplazamiento suave
+      const onClick = (e: MouseEvent) => {
+        const a = (e.target as HTMLElement).closest('a[href^="/#"], a[href^="#"]') as HTMLAnchorElement | null;
+        if (!a || location.pathname !== '/') return;
+        const id = a.getAttribute('href')!.split('#')[1];
+        const el = id && document.getElementById(id);
+        if (el) { e.preventDefault(); lenis.scrollTo(el, { offset: -70 }); history.replaceState(null, '', `#${id}`); }
+      };
+      document.addEventListener('click', onClick);
+      cleanup = () => { stop(); lenis.destroy(); document.removeEventListener('click', onClick); document.removeEventListener('visibilitychange', onVisibility); };
+    });
+    return () => { disposed = true; cleanup(); };
   }, []);
   return null;
 }

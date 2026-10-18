@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { isLowPowerDevice } from '@/lib/perf';
 
 interface Props {
   /** Colores de las manchas de luz (aurora). */
@@ -38,7 +39,8 @@ export function InteractiveBackground({ colors = ['#3E4A52', '#8FA4B0', '#1f2a30
     const dotCanvas = dotsRef.current;
     const actx = aurora.getContext('2d')!;
     const dctx = dotCanvas?.getContext('2d') ?? null;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // En gama baja se comporta como `prefers-reduced-motion`: se dibuja una vez, sin bucle rAF.
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches || isLowPowerDevice();
     const root = document.documentElement;
 
     let w = 0, h = 0, dpr = 1, raf = 0, visible = true, t = 0, last = 0;
@@ -208,7 +210,7 @@ export function InteractiveBackground({ colors = ['#3E4A52', '#8FA4B0', '#1f2a30
 
     function frame(now: number) {
       raf = requestAnimationFrame(frame);
-      if (!visible) { last = now; return; }
+      if (!visible || document.hidden) { last = now; return; }
       const dt = Math.min(now - (last || now), 48) / 16.67; // en "frames de 60 Hz"
       last = now;
       t = now;
