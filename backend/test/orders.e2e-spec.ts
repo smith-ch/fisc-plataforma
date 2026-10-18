@@ -1,7 +1,8 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { configureApp } from '../src/app.setup';
 
 /**
  * Flujo completo contra el API real (módulos, guard global, validación y TypeORM)
@@ -30,8 +31,7 @@ describe('Órdenes (e2e)', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication();
-    app.setGlobalPrefix('api');
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    configureApp(app);
     await app.init();
     http = request(app.getHttpServer());
 
@@ -337,6 +337,71 @@ describe('Órdenes (e2e)', () => {
       const cookie = cookiesOf(res).find((c) => c.startsWith('ps_session='))!;
       expect(cookie).toMatch(/^ps_session=;/);
       expect(cookie).toMatch(/Expires=Thu, 01 Jan 1970/);
+    });
+  });
+
+  describe('límites y cabeceras de seguridad (#8)', () => {
+    const throttleOn = () => delete process.env.THROTTLE_DISABLED;
+    afterEach(() => {
+      process.env.THROTTLE_DISABLED = 'true';
+    });
+
+    it('envía las cabeceras de helmet', async () => {
+      const res = await http.get('/api/services').expect(200);
+      expect(res.headers['x-content-type-options']).toBe('nosniff');
+      expect(res.headers['content-security-policy']).toContain("default-src 'self'");
+      expect(res.headers['strict-transport-security']).toBeDefined();
+      expect(res.headers['x-frame-options']).toBeDefined();
+      expect(res.headers['x-powered-by']).toBeUndefined();
+      expect(res.headers['cross-origin-resource-policy']).toBe('cross-origin');
+    });
+
+    it('GET /orders/track limita a 10 por minuto y responde 429 con Retry-After', async () => {
+      throttleOn();
+      const call = () => http.get('/api/orders/track').query({ code: 'ORD-999999', email: 'nadie@test.local' });
+      for (let n = 0; n < 10; n++) await call().expect(404);
+      const blocked = await call().expect(429);
+      expect(blocked.headers['retry-after']).toBeDefined();
+    });
+
+    it('POST /leads limita a 5 por 10 minutos', async () => {
+      throttleOn();
+      const send = () => http.post('/api/leads').send({ name: 'Spam', phone: '8095550000', message: 'Mensaje repetido' });
+      for (let n = 0; n < 5; n++) await send().expect(201);
+      await send().expect(429);
+    });
+
+    it('POST /auth/login limita a 10 por minuto por IP', async () => {
+      throttleOn();
+      const attempt = (n: number) => http.post('/api/auth/login').send({ email: `rafaga${n}@test.local`, password: 'incorrecta' });
+      for (let n = 0; n < 10; n++) await attempt(n).expect(401);
+      await attempt(11).expect(429);
+    });
+
+    it('las demás rutas siguen respondiendo con el límite global activo', async () => {
+      throttleOn();
+      await http.get('/api/services').expect(200);
+    });
+
+    it('tras 3 contraseñas incorrectas bloquea ese correo aunque luego llegue la correcta, sin afectar a otros', async () => {
+      await http.post('/api/auth/register').send({ name: 'Bloqueada', email: 'bloqueo@test.local', password: 'Secreta123' }).expect(201);
+      const login = (password: string, email = 'bloqueo@test.local') => http.post('/api/auth/login').send({ email, password });
+      for (let n = 0; n < 3; n++) await login('mala').expect(401);
+      const locked = await login('Secreta123').expect(429);
+      expect(locked.body.message).toMatch(/Demasiados intentos/);
+      expect(locked.headers['set-cookie']).toBeUndefined();
+      await login('Secreta123', 'BLOQUEO@test.local').expect(429); // el correo se compara sin distinguir mayúsculas
+      await http.post('/api/auth/login').send({ email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD }).expect(201);
+    });
+
+    it('un login correcto reinicia el conteo de fallos', async () => {
+      await http.post('/api/auth/register').send({ name: 'Reinicia', email: 'reinicia@test.local', password: 'Secreta123' }).expect(201);
+      const login = (password: string) => http.post('/api/auth/login').send({ email: 'reinicia@test.local', password });
+      for (let round = 0; round < 3; round++) {
+        await login('mala').expect(401);
+        await login('mala').expect(401);
+        await login('Secreta123').expect(201);
+      }
     });
   });
 });

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { mkdirSync } from 'fs';
@@ -39,6 +40,11 @@ function databaseConfig(config: ConfigService): TypeOrmModuleOptions {
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    // Límite global por IP; las rutas públicas sensibles lo endurecen con @Throttle. THROTTLE_DISABLED=true lo apaga (pruebas).
+    ThrottlerModule.forRoot({
+      throttlers: [{ ttl: 60_000, limit: Number(process.env.THROTTLE_LIMIT || 300) }],
+      skipIf: () => process.env.THROTTLE_DISABLED === 'true',
+    }),
     TypeOrmModule.forRootAsync({ inject: [ConfigService], useFactory: databaseConfig }),
     TypeOrmModule.forFeature([User, Pillar, ServiceItem, SiteSetting, Faq, Order, Payment, Review, Lead, IntegrationLog]),
     JwtModule.registerAsync({
@@ -58,6 +64,6 @@ function databaseConfig(config: ConfigService): TypeOrmModuleOptions {
     OrdersModule,
   ],
   controllers: [UploadsController, PaypalController, DashboardController],
-  providers: [{ provide: APP_GUARD, useClass: AuthGuard }, { provide: APP_INTERCEPTOR, useClass: RevalidateInterceptor }, SeedService],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }, { provide: APP_GUARD, useClass: AuthGuard }, { provide: APP_INTERCEPTOR, useClass: RevalidateInterceptor }, SeedService],
 })
 export class AppModule {}
