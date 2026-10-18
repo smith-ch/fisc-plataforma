@@ -6,9 +6,12 @@ import { Reveal } from '@/components/fx/effects';
 import { AddToCart } from '@/components/site/AddToCart';
 import { PageHero } from '@/components/ui/PageHero';
 import { waLink } from '@/lib/constants';
-import { getContent, getService } from '@/lib/server';
+import { getContent, getService, getServiceSlugs } from '@/lib/server';
 
-export const dynamic = 'force-dynamic';
+// Se prerenderizan los servicios conocidos; los nuevos se generan en la primera visita.
+export async function generateStaticParams() {
+  return (await getServiceSlugs()).map((slug) => ({ slug }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const s = await getService((await params).slug);
