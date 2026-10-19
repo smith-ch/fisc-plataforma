@@ -138,6 +138,16 @@ body {
   .only-desktop { display: none; }
 }
 
+/* Fondo estático de las secciones en móvil (sustituye al canvas): las mismas manchas de color de la aurora, sin JavaScript. */
+.aurora-static {
+  --a: 24%;
+  background:
+    radial-gradient(60% 55% at 22% 28%, color-mix(in srgb, var(--c0) var(--a), transparent), transparent 70%),
+    radial-gradient(55% 50% at 78% 38%, color-mix(in srgb, var(--c1) var(--a), transparent), transparent 70%),
+    radial-gradient(60% 55% at 45% 85%, color-mix(in srgb, var(--c2) var(--a), transparent), transparent 70%);
+}
+.dark .aurora-static { --a: 42%; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }

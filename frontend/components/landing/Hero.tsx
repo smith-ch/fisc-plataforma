@@ -59,7 +59,7 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
         // eslint-disable-next-line @next/next/no-img-element
         <img src={hero.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-15 dark:opacity-25" />
       )}
-      <InteractiveBackground colors={[brand.primaryColor, brand.accentColor, '#1f2a30', '#5b6b75']} />
+      <InteractiveBackground hero colors={[brand.primaryColor, brand.accentColor, '#1f2a30', '#5b6b75']} />
       {/* LogoShards no se monta en móvil (ver su comentario) */}
       <LogoShards scrollTarget={ref} />
     </>

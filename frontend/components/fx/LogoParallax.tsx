@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { preload } from 'react-dom';
 import { useEffect, useRef } from 'react';
 import { useLightHero } from '@/lib/perf';
+import { onPointerMove } from '@/lib/pointer';
 
 type Variant = 'white' | 'black' | 'auto';
 
@@ -36,16 +37,12 @@ function usePointer() {
   const lastMove = useRef(-Infinity);
   const reduced = useReducedMotion();
 
-  useEffect(() => {
-    const onMove = (e: PointerEvent) => {
-      if (e.pointerType === 'touch') return;
-      lastMove.current = performance.now();
-      mx.set((e.clientX / window.innerWidth) * 2 - 1);
-      my.set((e.clientY / window.innerHeight) * 2 - 1);
-    };
-    window.addEventListener('pointermove', onMove, { passive: true });
-    return () => window.removeEventListener('pointermove', onMove);
-  }, [mx, my]);
+  // Listener compartido (lib/pointer.ts): un solo `pointermove` en window para toda la página, y solo con ratón.
+  useEffect(() => onPointerMove((e) => {
+    lastMove.current = performance.now();
+    mx.set((e.clientX / window.innerWidth) * 2 - 1);
+    my.set((e.clientY / window.innerHeight) * 2 - 1);
+  }), [mx, my]);
 
   useAnimationFrame((now) => {
     if (reduced || performance.now() - lastMove.current < 3500) return;

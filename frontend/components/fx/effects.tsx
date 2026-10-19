@@ -3,6 +3,7 @@
 import { motion, useInView, useMotionValue, useScroll, useSpring, useTransform } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { isLowPowerDevice } from '@/lib/perf';
+import { hasFinePointer } from '@/lib/pointer';
 
 /** Scroll suave (inercia) para toda la web pública. */
 export function SmoothScroll() {
@@ -79,6 +80,7 @@ export function SpotlightCard({ children, className = '', tilt = true }: { child
   const ry = useSpring(useMotionValue(0), { stiffness: 200, damping: 20 });
 
   function onMove(e: React.PointerEvent) {
+    if (!hasFinePointer()) return; // sin ratón no hay foco que seguir (y se evita un getBoundingClientRect por toque)
     const el = ref.current!;
     const r = el.getBoundingClientRect();
     const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
@@ -111,7 +113,7 @@ export function Magnetic({ children, strength = 0.3 }: { children: React.ReactNo
       className="inline-block"
       style={{ x, y }}
       onPointerMove={(e) => {
-        if (e.pointerType !== 'mouse') return;
+        if (e.pointerType !== 'mouse' || !hasFinePointer()) return;
         const r = ref.current!.getBoundingClientRect();
         x.set((e.clientX - r.left - r.width / 2) * strength);
         y.set((e.clientY - r.top - r.height / 2) * strength);
