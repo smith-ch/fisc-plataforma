@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
 import { Reveal } from '@/components/fx/effects';
 import { InstagramIcon, WhatsAppIcon } from '@/components/Icon';
-import { waLink } from '@/lib/constants';
+import { mailtoLink, mapLink, telLink, whatsappLink } from '@/lib/contact';
 import type { Settings } from '@/lib/types';
 
 export function Contact({ contact, brand }: { contact: Settings['contact']; brand: Settings['brand'] }) {
@@ -17,7 +17,7 @@ export function Contact({ contact, brand }: { contact: Settings['contact']; bran
     if (!contact.whatsapp) return;
     const data = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
     const text = `Hola, soy ${data.name}. ${data.message}\n\nMi teléfono: ${data.phone}`;
-    window.open(waLink(contact.whatsapp, text), '_blank', 'noopener,noreferrer');
+    window.open(whatsappLink(contact.whatsapp, text), '_blank', 'noopener,noreferrer');
     setSent(true);
   }
 
@@ -33,7 +33,7 @@ export function Contact({ contact, brand }: { contact: Settings['contact']; bran
           <p className="mt-6 max-w-lg text-lg text-white/65">Escríbenos por WhatsApp o Instagram, o deja tus datos y te respondemos por WhatsApp en menos de 24 horas.</p>
           <div className="mt-10 flex flex-wrap gap-3">
             {contact.whatsapp && (
-              <a href={waLink(contact.whatsapp, contact.whatsappMessage)} target="_blank" rel="noopener noreferrer" className="btn bg-[#25D366] px-6 py-3.5 text-white hover:brightness-110">
+              <a href={whatsappLink(contact.whatsapp, contact.whatsappMessage)} target="_blank" rel="noopener noreferrer" className="btn bg-[#25D366] px-6 py-3.5 text-white hover:brightness-110">
                 <WhatsAppIcon className="h-5 w-5" /> WhatsApp Business
               </a>
             )}
@@ -44,9 +44,9 @@ export function Contact({ contact, brand }: { contact: Settings['contact']; bran
             )}
           </div>
           <ul className="mt-10 space-y-3 text-white/70">
-            {contact.phone && <li className="flex items-center gap-3"><Phone className="h-4 w-4 text-accent" /> {contact.phone}</li>}
-            {contact.email && <li className="flex items-center gap-3"><Mail className="h-4 w-4 text-accent" /> {contact.email}</li>}
-            {contact.address && <li className="flex items-center gap-3"><MapPin className="h-4 w-4 text-accent" /> {contact.address}</li>}
+            {contact.phone && <li><a href={telLink(contact.phone)} className="flex items-center gap-3 hover:text-white"><Phone className="h-4 w-4 text-accent" /> {contact.phone}</a></li>}
+            {contact.email && <li><a href={mailtoLink(contact.email)} className="flex items-center gap-3 break-all hover:text-white"><Mail className="h-4 w-4 text-accent" /> {contact.email}</a></li>}
+            {contact.address && <li><a href={mapLink(contact.address)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:text-white"><MapPin className="h-4 w-4 text-accent" /> {contact.address}</a></li>}
           </ul>
         </Reveal>
         <Reveal delay={0.15}>

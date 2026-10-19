@@ -5,7 +5,7 @@ import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '@/components/providers';
 import { ServiceIcon, WhatsAppIcon } from '@/components/Icon';
-import { waLink } from '@/lib/constants';
+import { whatsappLink } from '@/lib/contact';
 import { mensajeSolicitud } from '@/lib/solicitud';
 
 /** Carrito lateral. `phone` es el WhatsApp del negocio (solo dígitos con código de país). */
@@ -48,7 +48,7 @@ export function CartDrawer({ phone }: { phone: string }) {
               <div className="space-y-3 border-t border-ink-900/10 p-5">
                 <p className="text-xs text-ink-900/60">Un solo levantamiento para todos los servicios. Te respondemos por WhatsApp con una cotización unificada.</p>
                 {phone && (
-                  <a href={waLink(phone, mensajeSolicitud(cart.items))} target="_blank" rel="noopener noreferrer"
+                  <a href={whatsappLink(phone, mensajeSolicitud(cart.items))} target="_blank" rel="noopener noreferrer"
                     className="btn w-full bg-[#25D366] text-white hover:brightness-110">
                     <WhatsAppIcon className="h-5 w-5" /> Enviar por WhatsApp
                   </a>

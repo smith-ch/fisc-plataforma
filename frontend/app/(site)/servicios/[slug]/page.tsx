@@ -5,7 +5,7 @@ import { ServiceIcon, WhatsAppIcon } from '@/components/Icon';
 import { Reveal } from '@/components/fx/effects';
 import { AddToCart } from '@/components/site/AddToCart';
 import { PageHero } from '@/components/ui/PageHero';
-import { waLink } from '@/lib/constants';
+import { whatsappLink } from '@/lib/contact';
 import { getContent, getService, getServiceSlugs } from '@/lib/server';
 
 // Se prerenderizan los servicios conocidos; los nuevos se generan en la primera visita.
@@ -27,7 +27,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
         <div className="mt-8 flex flex-wrap gap-3">
           <AddToCart service={service} className="px-6 py-3.5" label="Agregar a mi solicitud" />
           {settings.contact.whatsapp && (
-            <a href={waLink(settings.contact.whatsapp, `Hola, me interesa el servicio: ${service.name}`)} target="_blank" rel="noopener noreferrer"
+            <a href={whatsappLink(settings.contact.whatsapp, `Hola, me interesa el servicio: ${service.name}`)} target="_blank" rel="noopener noreferrer"
               className="btn bg-[#25D366] px-6 py-3.5 text-white"><WhatsAppIcon className="h-5 w-5" /> Consultar por WhatsApp</a>
           )}
         </div>
