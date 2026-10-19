@@ -1,14 +1,20 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { isLowPowerDevice } from '@/lib/perf';
+import { isLowPowerDevice, useLightHero } from '@/lib/perf';
+import { onPointerDown, onPointerMove } from '@/lib/pointer';
 
 interface Props {
   /** Colores de las manchas de luz (aurora). */
   colors?: string[];
-  /** Muestra la malla de puntos reactiva al cursor. */
+  /** Muestra la malla de puntos reactiva al cursor (solo con ratón: en móvil no se dibuja). */
   dots?: boolean;
   className?: string;
+  /**
+   * Fondo del hero: es el único que conserva el canvas en móvil (dibujado una vez, sin animación: animarlo costaba ~1,5 s de hilo principal). El resto de secciones usan un degradado CSS estático
+   * en móvil y con "reducir movimiento" (ver `.aurora-static` en globals.css).
+   */
+  hero?: boolean;
 }
 
 interface Dot { x: number; y: number; ox: number; oy: number; vx: number; vy: number; glow: number }
@@ -28,7 +34,23 @@ const RIPPLE_WIDTH = 70; // px
  * Sigue el tema claro/oscuro, se pausa fuera de pantalla y respeta
  * `prefers-reduced-motion`.
  */
-export function InteractiveBackground({ colors = ['#3E4A52', '#8FA4B0', '#1f2a30', '#5b6b75'], dots = true, className = '' }: Props) {
+const DEFAULT_COLORS = ['#3E4A52', '#8FA4B0', '#1f2a30', '#5b6b75'];
+
+export function InteractiveBackground({ colors = DEFAULT_COLORS, dots = true, className = '', hero = false }: Props) {
+  const light = useLightHero(); // móvil o "reducir movimiento"
+  // Hero: siempre canvas (en móvil sin la malla de puntos). Resto: canvas en escritorio y degradado estático en móvil; el HTML
+  // lleva ambos y el CSS muestra uno (.only-mobile / .only-desktop), así que no hay parpadeo al hidratar.
+  if (hero) return <CanvasBackground colors={colors} dots={dots && !light} className={className} mobile={light} />;
+  const vars = { '--c0': colors[0], '--c1': colors[1] ?? colors[0], '--c2': colors[2] ?? colors[0] } as React.CSSProperties;
+  return (
+    <>
+      <div aria-hidden className={`aurora-static only-mobile pointer-events-none absolute inset-0 ${className}`} style={vars} />
+      <div className="only-desktop">{!light && <CanvasBackground colors={colors} dots={dots} className={className} mobile={false} />}</div>
+    </>
+  );
+}
+
+function CanvasBackground({ colors, dots, className, mobile }: { colors: string[]; dots: boolean; className: string; mobile: boolean }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const auroraRef = useRef<HTMLCanvasElement>(null);
   const dotsRef = useRef<HTMLCanvasElement>(null);
@@ -39,7 +61,8 @@ export function InteractiveBackground({ colors = ['#3E4A52', '#8FA4B0', '#1f2a30
     const dotCanvas = dotsRef.current;
     const actx = aurora.getContext('2d')!;
     const dctx = dotCanvas?.getContext('2d') ?? null;
-    // En gama baja se comporta como `prefers-reduced-motion`: se dibuja una vez, sin bucle rAF.
+    // En móvil y en gama baja se comporta como `prefers-reduced-motion`: se dibuja una vez, sin bucle rAF. (Medido: animar el
+    // hero en móvil añadía ~1,5 s de hilo principal con la CPU 4× más lenta, sin aportar nada visible.)
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches || isLowPowerDevice();
     const root = document.documentElement;
 
@@ -77,7 +100,7 @@ export function InteractiveBackground({ colors = ['#3E4A52', '#8FA4B0', '#1f2a30
     function resize() {
       const rect = wrap.getBoundingClientRect();
       w = rect.width; h = rect.height;
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      dpr = mobile ? 1 : Math.min(window.devicePixelRatio || 1, 2);
       // La aurora se pinta a baja resolución (se difumina con CSS): mucho más barato.
       aurora.width = Math.max(1, Math.round(w / 6));
       aurora.height = Math.max(1, Math.round(h / 6));
@@ -208,9 +231,19 @@ export function InteractiveBackground({ colors = ['#3E4A52', '#8FA4B0', '#1f2a30
 
     function draw() { drawAurora(); drawDots(); }
 
-    function frame(now: number) {
+    /** Solo se anima mientras la sección se ve y la pestaña está activa. */
+    const shouldRun = () => visible && !document.hidden;
+    /** Arranca el bucle si hace falta (no deja ningún rAF pendiente cuando no hay nada que animar). */
+    function start() {
+      if (reduced || raf || !shouldRun()) return;
+      last = 0;
       raf = requestAnimationFrame(frame);
-      if (!visible || document.hidden) { last = now; return; }
+    }
+
+    function frame(now: number) {
+      raf = 0;
+      if (!shouldRun()) return; // fuera de pantalla o pestaña oculta: se corta; `start()` lo retoma al volver
+      raf = requestAnimationFrame(frame);
       const dt = Math.min(now - (last || now), 48) / 16.67; // en "frames de 60 Hz"
       last = now;
       t = now;
@@ -248,6 +281,7 @@ export function InteractiveBackground({ colors = ['#3E4A52', '#8FA4B0', '#1f2a30
     }
 
     function onDown(e: PointerEvent) {
+      if (!visible) return;
       const rect = wrap.getBoundingClientRect();
       if (e.clientY < rect.top || e.clientY > rect.bottom) return;
       ripples.push({ x: e.clientX - rect.left, y: e.clientY - rect.top, t0: performance.now(), power: 1 });
@@ -280,7 +314,7 @@ export function InteractiveBackground({ colors = ['#3E4A52', '#8FA4B0', '#1f2a30
 
     // rootMargin da el mismo margen de "cerca de pantalla" que antes calculaba
     // onScroll a mano (200px), para no perder la ligera anticipación del efecto.
-    const io = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; }, { rootMargin: '200px' });
+    const io = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; if (visible) start(); }, { rootMargin: '200px' });
     io.observe(wrap);
     const ro = new ResizeObserver(resize);
     ro.observe(wrap);
@@ -288,28 +322,34 @@ export function InteractiveBackground({ colors = ['#3E4A52', '#8FA4B0', '#1f2a30
     const mo = new MutationObserver(() => { dark = root.classList.contains('dark'); if (reduced) draw(); });
     mo.observe(root, { attributes: true, attributeFilter: ['class'] });
     resize();
-    window.addEventListener('pointermove', onMove, { passive: true });
-    window.addEventListener('pointerdown', onDown, { passive: true });
-    window.addEventListener('scroll', onScroll, { passive: true });
+    // Puntero: un listener compartido para toda la página (lib/pointer.ts) y solo con ratón. Las ondas (clic y scroll) solo afectan
+    // a la malla de puntos, así que sin malla ni ratón no se registra nada.
+    const offMove = onPointerMove(onMove);
+    const offDown = dctx && !reduced ? onPointerDown(onDown) : () => {};
+    const useScrollRipples = !!dctx && !reduced;
+    if (useScrollRipples) window.addEventListener('scroll', onScroll, { passive: true });
     root.addEventListener('pointerleave', onLeave);
+    document.addEventListener('visibilitychange', start);
     if (reduced) draw();
     else {
-      // Onda de bienvenida desde el centro al cargar
-      ripples.push({ x: w * 0.5, y: h * 0.5, t0: performance.now() + 250, power: 0.8 });
-      raf = requestAnimationFrame(frame);
+      // Onda de bienvenida desde el centro al cargar (solo hay malla que moverle)
+      if (dctx) ripples.push({ x: w * 0.5, y: h * 0.5, t0: performance.now() + 250, power: 0.8 });
+      start();
     }
 
     return () => {
       cancelAnimationFrame(raf);
+      raf = 0;
       io.disconnect();
       ro.disconnect();
       mo.disconnect();
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerdown', onDown);
-      window.removeEventListener('scroll', onScroll);
+      offMove();
+      offDown();
+      if (useScrollRipples) window.removeEventListener('scroll', onScroll);
       root.removeEventListener('pointerleave', onLeave);
+      document.removeEventListener('visibilitychange', start);
     };
-  }, [colors.join(','), dots]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [colors.join(','), dots, mobile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div ref={wrapRef} aria-hidden className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}>
