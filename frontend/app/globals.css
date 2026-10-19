@@ -130,6 +130,14 @@ body {
   mix-blend-mode: overlay;
 }
 
+/* Hero: el HTML trae la versión ligera (.only-mobile) y la completa (.only-desktop); el CSS muestra una según el equipo.
+   La condición es la misma que `LIGHT_HERO_QUERY` de lib/perf.ts. */
+.only-mobile { display: none; }
+@media (max-width: 767px), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .only-mobile { display: block; }
+  .only-desktop { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
