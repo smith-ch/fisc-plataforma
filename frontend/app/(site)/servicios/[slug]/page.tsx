@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { ServiceIcon, WhatsAppIcon } from '@/components/Icon';
 import { Reveal } from '@/components/fx/effects';
 import { AddToCart } from '@/components/site/AddToCart';
+import { ContentImage } from '@/components/ui/ContentImage';
 import { PageHero } from '@/components/ui/PageHero';
 import { waLink } from '@/lib/constants';
 import { getContent, getService, getServiceSlugs } from '@/lib/server';
@@ -36,8 +37,9 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
         <div className="lg:col-span-2">
           <Link href="/servicios" className="mb-6 inline-flex items-center gap-1 text-sm text-ink-900/60 hover:text-brand-ink"><ArrowLeft className="h-4 w-4" /> Volver al catálogo</Link>
           {service.imageUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={service.imageUrl} alt={service.name} className="mb-8 aspect-video w-full rounded-3xl object-cover" />
+            <div className="relative mb-8 aspect-video overflow-hidden rounded-3xl bg-ink-900/5">
+              <ContentImage src={service.imageUrl} alt={service.name} priority sizes="(min-width: 1024px) 66vw, 100vw" className="object-cover" />
+            </div>
           )}
           <Reveal><p className="text-lg leading-relaxed text-ink-900/75 whitespace-pre-line">{service.description}</p></Reveal>
           {!!service.features?.length && (

@@ -1,5 +1,6 @@
 import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
 import { Reveal } from '@/components/fx/effects';
+import { ContentImage } from '@/components/ui/ContentImage';
 import { BeforeAfter } from './BeforeAfter';
 import type { Project } from '@/lib/types';
 
@@ -19,8 +20,9 @@ export function Projects({ projects }: { projects: Project[] }) {
             <Reveal key={p.id} delay={(i % 2) * 0.1}>
               <article>
                 {p.beforeUrl && p.afterUrl ? <BeforeAfter before={p.beforeUrl} after={p.afterUrl} /> : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.afterUrl || p.beforeUrl || ''} alt={p.title} loading="lazy" decoding="async" className="aspect-[4/3] w-full rounded-3xl object-cover" />
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-ink-900/5">
+                    <ContentImage src={p.afterUrl || p.beforeUrl || ''} alt={p.title} sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
+                  </div>
                 )}
                 <div className="mt-4 flex items-start justify-between gap-4">
                   <div>

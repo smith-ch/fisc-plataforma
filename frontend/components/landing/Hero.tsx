@@ -7,6 +7,7 @@ import { useRef } from 'react';
 import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
 import { LogoParallax, LogoShards } from '@/components/fx/LogoParallax';
 import { Magnetic, SplitWords } from '@/components/fx/effects';
+import { ContentImage } from '@/components/ui/ContentImage';
 import type { Settings } from '@/lib/types';
 
 export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings['brand'] }) {
@@ -27,8 +28,7 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
     <section ref={ref} className="grain relative flex min-h-[100svh] items-center overflow-hidden bg-sand-50 text-ink-900 dark:bg-ink-950">
       <motion.div style={{ y: bgY }} className="absolute inset-0">
         {hero.imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={hero.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-15 dark:opacity-25" />
+          <ContentImage src={hero.imageUrl} alt="" priority sizes="100vw" className="object-cover opacity-15 dark:opacity-25" />
         )}
         <InteractiveBackground colors={[brand.primaryColor, brand.accentColor, '#1f2a30', '#5b6b75']} />
         <LogoShards scrollTarget={ref} />
