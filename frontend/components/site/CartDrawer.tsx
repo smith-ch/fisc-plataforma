@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '@/components/providers';
@@ -15,9 +15,9 @@ export function CartDrawer({ phone }: { phone: string }) {
     <AnimatePresence>
       {cart.open && (
         <>
-          <motion.div className="fixed inset-0 z-[70] bg-ink-950/40" onClick={() => cart.setOpen(false)}
+          <m.div className="fixed inset-0 z-[70] bg-ink-950/40" onClick={() => cart.setOpen(false)}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
-          <motion.aside className="fixed top-0 right-0 bottom-0 z-[71] flex w-full max-w-md flex-col bg-sand-50 shadow-2xl"
+          <m.aside className="fixed top-0 right-0 bottom-0 z-[71] flex w-full max-w-md flex-col bg-sand-50 shadow-2xl"
             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }}
             data-lenis-prevent role="dialog" aria-label="Tu solicitud">
             <div className="flex items-center justify-between border-b border-ink-900/10 p-5">
@@ -58,7 +58,7 @@ export function CartDrawer({ phone }: { phone: string }) {
                 </Link>
               </div>
             )}
-          </motion.aside>
+          </m.aside>
         </>
       )}
     </AnimatePresence>

@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 import { Moon, Sun } from 'lucide-react';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { THEME_STORAGE_KEY as STORAGE_KEY } from '@/lib/theme-script';
@@ -63,10 +63,10 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
       title={dark ? 'Modo claro' : 'Modo oscuro'}
       className={`relative grid h-10 w-10 place-items-center overflow-hidden rounded-full transition hover:bg-ink-900/5 ${className}`}>
       <AnimatePresence mode="wait" initial={false}>
-        <motion.span key={theme} initial={{ y: 14, rotate: -90, opacity: 0 }} animate={{ y: 0, rotate: 0, opacity: 1 }}
+        <m.span key={theme} initial={{ y: 14, rotate: -90, opacity: 0 }} animate={{ y: 0, rotate: 0, opacity: 1 }}
           exit={{ y: -14, rotate: 90, opacity: 0 }} transition={{ duration: 0.25 }} className="grid place-items-center">
           {dark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-        </motion.span>
+        </m.span>
       </AnimatePresence>
     </button>
   );

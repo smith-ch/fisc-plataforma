@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 import { Menu, ShoppingBag, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -69,11 +69,11 @@ export function Header({ brand }: { brand: Settings['brand'] }) {
         </div>
         <AnimatePresence>
           {mobile && (
-            <motion.nav initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+            <m.nav initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
               className="mt-2 grid gap-1 rounded-3xl border border-ink-900/10 bg-paper p-3 shadow-xl lg:hidden">
               {NAV.map((n) => <Link key={n.href} href={n.href} className="rounded-xl px-4 py-3 font-medium hover:bg-sand-100">{n.label}</Link>)}
               <Link href="/solicitar" className="btn-primary mt-1">Solicitar servicio</Link>
-            </motion.nav>
+            </m.nav>
           )}
         </AnimatePresence>
       </div>

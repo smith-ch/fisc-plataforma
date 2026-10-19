@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import type { Faq } from '@/lib/types';
@@ -18,9 +18,9 @@ export function FaqList({ faqs }: { faqs: Faq[] }) {
           </button>
           <AnimatePresence initial={false}>
             {open === f.id && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+              <m.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                 <p className="pb-6 text-ink-900/65">{f.answer}</p>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>
