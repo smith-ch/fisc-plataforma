@@ -1,6 +1,5 @@
 'use client';
 
-import { AnimatePresence, m } from 'motion/react';
 import { Menu, ShoppingBag, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -67,15 +66,12 @@ export function Header({ brand }: { brand: Settings['brand'] }) {
             </button>
           </div>
         </div>
-        <AnimatePresence>
-          {mobile && (
-            <m.nav initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-              className="mt-2 grid gap-1 rounded-3xl border border-ink-900/10 bg-paper p-3 shadow-xl lg:hidden">
-              {NAV.map((n) => <Link key={n.href} href={n.href} className="rounded-xl px-4 py-3 font-medium hover:bg-sand-100">{n.label}</Link>)}
-              <Link href="/solicitar" className="btn-primary mt-1">Solicitar servicio</Link>
-            </m.nav>
-          )}
-        </AnimatePresence>
+        {/* Siempre montado: abrir/cerrar es una transición CSS (invisible quita los enlaces del tabulador mientras está cerrado) */}
+        <nav aria-label="Navegación" className={`mt-2 grid gap-1 rounded-3xl border border-ink-900/10 bg-paper p-3 shadow-xl transition-[opacity,transform,visibility] duration-200 lg:hidden ${
+          mobile ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-2.5 opacity-0'}`}>
+          {NAV.map((n) => <Link key={n.href} href={n.href} className="rounded-xl px-4 py-3 font-medium hover:bg-sand-100">{n.label}</Link>)}
+          <Link href="/solicitar" className="btn-primary mt-1">Solicitar servicio</Link>
+        </nav>
       </div>
     </header>
   );

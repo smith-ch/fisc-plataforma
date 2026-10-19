@@ -1,9 +1,10 @@
 'use client';
 
-import { m, useInView, useMotionValue, useScroll, useSpring, useTransform } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
+import { onceInView } from '@/lib/in-view';
 import { isLowPowerDevice } from '@/lib/perf';
 import { hasFinePointer } from '@/lib/pointer';
+import { useScrollProgress } from '@/lib/scroll-fx';
 
 /** Scroll suave (inercia) para toda la web pública. */
 export function SmoothScroll() {
@@ -38,35 +39,26 @@ export function SmoothScroll() {
   return null;
 }
 
-/** Aparición al entrar en pantalla. */
+/** Aparición al entrar en pantalla (CSS + un IntersectionObserver compartido; ver `.reveal` en globals.css). */
 export function Reveal({ children, delay = 0, y = 32, className = '' }: { children: React.ReactNode; delay?: number; y?: number; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => onceInView(ref.current!, () => ref.current?.classList.add('is-in'), '0px 0px -80px 0px'), []);
   return (
-    <m.div
-      className={className}
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-80px' }}
-      transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
-    >
+    <div ref={ref} className={`reveal ${className}`} style={{ '--ry': `${y}px`, '--rd': `${delay}s` } as React.CSSProperties}>
       {children}
-    </m.div>
+    </div>
   );
 }
 
-/** Titular que aparece palabra por palabra. */
+/** Titular que aparece palabra por palabra (animación CSS: arranca con la hoja de estilos, sin esperar a React). */
 export function SplitWords({ text, className = '', delay = 0 }: { text: string; className?: string; delay?: number }) {
   return (
     <span className={className}>
       {text.split(' ').map((word, i) => (
         <span key={i} className="inline-block overflow-hidden pb-[0.12em] align-bottom">
-          <m.span
-            className="inline-block"
-            initial={{ y: '110%' }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.9, delay: delay + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-          >
+          <span className="fx-rise inline-block" style={{ '--y': '110%', '--o': 1, '--dur': '0.9s', '--d': `${delay + i * 0.06}s` } as React.CSSProperties}>
             {word}&nbsp;
-          </m.span>
+          </span>
         </span>
       ))}
     </span>
@@ -76,8 +68,6 @@ export function SplitWords({ text, className = '', delay = 0 }: { text: string; 
 /** Tarjeta con foco de luz que sigue al cursor y leve inclinación 3D. */
 export function SpotlightCard({ children, className = '', tilt = true }: { children: React.ReactNode; className?: string; tilt?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
-  const rx = useSpring(useMotionValue(0), { stiffness: 200, damping: 20 });
-  const ry = useSpring(useMotionValue(0), { stiffness: 200, damping: 20 });
 
   function onMove(e: React.PointerEvent) {
     if (!hasFinePointer()) return; // sin ratón no hay foco que seguir (y se evita un getBoundingClientRect por toque)
@@ -86,57 +76,46 @@ export function SpotlightCard({ children, className = '', tilt = true }: { child
     const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
     el.style.setProperty('--mx', `${px * 100}%`);
     el.style.setProperty('--my', `${py * 100}%`);
-    if (tilt && e.pointerType === 'mouse') { rx.set((0.5 - py) * 8); ry.set((px - 0.5) * 8); }
+    if (tilt && e.pointerType === 'mouse') el.style.transform = `perspective(900px) rotateX(${(0.5 - py) * 8}deg) rotateY(${(px - 0.5) * 8}deg)`;
   }
 
   return (
-    <m.div
+    <div
       ref={ref}
       onPointerMove={onMove}
-      onPointerLeave={() => { rx.set(0); ry.set(0); }}
-      style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }}
+      onPointerLeave={() => { ref.current!.style.transform = ''; }}
       className={`spotlight ${className}`}
     >
       {children}
-    </m.div>
+    </div>
   );
 }
 
 /** Botón / elemento "magnético" que se acerca al cursor. */
 export function Magnetic({ children, strength = 0.3 }: { children: React.ReactNode; strength?: number }) {
   const ref = useRef<HTMLDivElement>(null);
-  const x = useSpring(0, { stiffness: 250, damping: 18 });
-  const y = useSpring(0, { stiffness: 250, damping: 18 });
   return (
-    <m.div
+    <div
       ref={ref}
-      className="inline-block"
-      style={{ x, y }}
+      className="magnetic inline-block"
       onPointerMove={(e) => {
         if (e.pointerType !== 'mouse' || !hasFinePointer()) return;
-        const r = ref.current!.getBoundingClientRect();
-        x.set((e.clientX - r.left - r.width / 2) * strength);
-        y.set((e.clientY - r.top - r.height / 2) * strength);
+        const el = ref.current!;
+        const r = el.getBoundingClientRect();
+        el.style.transform = `translate3d(${(e.clientX - r.left - r.width / 2) * strength}px, ${(e.clientY - r.top - r.height / 2) * strength}px, 0)`;
       }}
-      onPointerLeave={() => { x.set(0); y.set(0); }}
+      onPointerLeave={() => { ref.current!.style.transform = ''; }}
     >
       {children}
-    </m.div>
+    </div>
   );
-}
-
-/** Desplazamiento parallax en función del scroll. */
-export function Parallax({ children, offset = 80, className = '' }: { children: React.ReactNode; offset?: number; className?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
-  const y = useTransform(scrollYProgress, [0, 1], [offset, -offset]);
-  return <m.div ref={ref} style={{ y }} className={className}>{children}</m.div>;
 }
 
 /** Contador animado (ej. "100%", "24h", "10+"). */
 export function CountUp({ value }: { value: string }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true });
+  const [inView, setInView] = useState(false);
+  useEffect(() => onceInView(ref.current!, () => setInView(true)), []);
   const match = value.match(/^(\D*)(\d+(?:\.\d+)?)(.*)$/);
   const [n, setN] = useState(0);
   useEffect(() => {
@@ -158,7 +137,7 @@ export function CountUp({ value }: { value: string }) {
 
 /** Barra de progreso de lectura en la parte superior. */
 export function ScrollProgress() {
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 30 });
-  return <m.div style={{ scaleX }} className="fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-accent" />;
+  const ref = useRef<HTMLDivElement>(null);
+  useScrollProgress(null, 'page', (p) => { if (ref.current) ref.current.style.transform = `scaleX(${p})`; });
+  return <div ref={ref} className="fixed inset-x-0 top-0 z-[60] h-0.5 origin-left scale-x-0 bg-accent transition-transform duration-150 ease-out" />;
 }

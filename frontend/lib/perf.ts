@@ -40,3 +40,21 @@ export function useLightHero(): boolean {
     () => false,
   );
 }
+
+/**
+ * ¿Hay que cargar los efectos de escritorio (parallax del logo, fragmentos, scroll del hero)? Es lo contrario de `useLightHero()`,
+ * pero vale `false` en el servidor y durante la hidratación *también en escritorio*: solo pasa a `true` después, ya con el
+ * valor real del equipo. Así un móvil nunca llega a montar (ni a descargar) los componentes cargados con `next/dynamic`.
+ */
+export function useDesktopFx(): boolean {
+  return useSyncExternalStore(
+    (notify) => {
+      if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return () => {};
+      const mq = window.matchMedia(LIGHT_HERO_QUERY);
+      mq.addEventListener('change', notify);
+      return () => mq.removeEventListener('change', notify);
+    },
+    () => !matchesMedia(LIGHT_HERO_QUERY),
+    () => false,
+  );
+}
