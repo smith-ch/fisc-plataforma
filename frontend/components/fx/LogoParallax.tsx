@@ -4,6 +4,7 @@ import { motion, useAnimationFrame, useMotionTemplate, useMotionValue, useReduce
 import Image from 'next/image';
 import { preload } from 'react-dom';
 import { useEffect, useRef } from 'react';
+import { useLightHero } from '@/lib/perf';
 
 type Variant = 'white' | 'black' | 'auto';
 
@@ -76,7 +77,8 @@ export function LogoParallax({ variant = 'auto', className = '', scrollTarget }:
   scrollTarget?: React.RefObject<HTMLElement | null>;
 }) {
   // Las máscaras del brillo se descubren por CSS (tarde); se precargan para que la pieza no espere por ellas
-  for (const p of PIECES) preload(`/brand/piece-${p.id}-white.webp`, { as: 'image' });
+  // `media`: en móvil el hero usa `LogoStatic`, que no necesita estas máscaras.
+  for (const p of PIECES) preload(`/brand/piece-${p.id}-white.webp`, { as: 'image', media: '(min-width: 768px) and (pointer: fine)' });
   const ref = useRef<HTMLDivElement>(null);
   const { mx, my } = usePointer();
   const sx = useSpring(mx, { stiffness: 60, damping: 18 });
@@ -96,6 +98,24 @@ export function LogoParallax({ variant = 'auto', className = '', scrollTarget }:
           <Piece key={p.id} piece={p} index={i} variant={variant} sx={sx} sy={sy} explode={explode} />
         ))}
       </motion.div>
+    </div>
+  );
+}
+
+/**
+ * Versión ligera del símbolo para móvil y "reducir movimiento": las 4 piezas ensambladas, sin movimiento, sin `filter`
+ * (ni blur ni drop-shadow), sin `mix-blend-mode` y sin hooks de scroll ni de puntero. El halo es un degradado radial, no un desenfoque.
+ */
+export function LogoStatic({ variant = 'auto', className = '' }: { variant?: Variant; className?: string }) {
+  return (
+    <div className={`relative aspect-[422/511] w-full ${className}`}>
+      <div aria-hidden className="absolute inset-[4%] rounded-full"
+        style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--color-accent) 35%, transparent) 0%, transparent 68%)' }} />
+      {PIECES.map((p) => (
+        <div key={p.id} className="absolute inset-0">
+          <PieceImg id={p.id} variant={variant} sizes="(min-width: 640px) 224px, 176px" className="h-full w-full" />
+        </div>
+      ))}
     </div>
   );
 }
@@ -160,7 +180,16 @@ const SHARDS = [
   { id: 's-bottom', left: 2, top: 46, size: 60, depth: 0.1, rot: 80, blur: 5, o: 0.1 },
 ];
 
+/**
+ * Campo de fragmentos del hero. En móvil y con "reducir movimiento" no se monta: son 8 piezas con `blur()`, animación continua,
+ * `useScroll` y seguimiento de puntero. El HTML del servidor lo trae oculto por CSS (`.only-desktop`), así que no parpadea.
+ */
 export function LogoShards({ variant = 'auto', scrollTarget }: { variant?: Variant; scrollTarget?: React.RefObject<HTMLElement | null> }) {
+  const light = useLightHero();
+  return <div className="only-desktop absolute inset-0">{!light && <ShardsField variant={variant} scrollTarget={scrollTarget} />}</div>;
+}
+
+function ShardsField({ variant, scrollTarget }: { variant: Variant; scrollTarget?: React.RefObject<HTMLElement | null> }) {
   const { mx, my } = usePointer();
   const sx = useSpring(mx, { stiffness: 40, damping: 20 });
   const sy = useSpring(my, { stiffness: 40, damping: 20 });
