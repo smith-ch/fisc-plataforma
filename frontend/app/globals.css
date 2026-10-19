@@ -130,6 +130,11 @@ body {
   mix-blend-mode: overlay;
 }
 
+/* Móvil: el grano (mezcla `overlay` sobre todo el hero) es de lo más caro de pintar en una GPU pequeña y casi no se nota en una pantalla chica. */
+@media (max-width: 767px) {
+  .grain::after { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }

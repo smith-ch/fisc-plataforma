@@ -38,8 +38,8 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
       <div className="container-x relative z-10 grid items-center gap-6 pt-28 pb-20 lg:grid-cols-12">
       <motion.div style={{ scale, opacity, y }} className="lg:col-span-7">
         <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}
-          className="eyebrow mb-6 inline-flex items-center gap-2 rounded-full border border-ink-900/15 bg-ink-900/5 px-4 py-2 text-ink-900/80 backdrop-blur">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand dark:bg-accent" /> {hero.eyebrow}
+          className="eyebrow mb-6 inline-flex items-center gap-2 rounded-full border border-ink-900/15 bg-ink-900/5 px-4 py-2 text-ink-900/80 backdrop-blur max-md:backdrop-blur-none">
+          <span className="h-1.5 w-1.5 animate-pulse max-md:[animation-iteration-count:3] rounded-full bg-brand dark:bg-accent" /> {hero.eyebrow}
         </motion.p>
         <h1 className="text-5xl leading-[0.95] font-bold tracking-tight sm:text-6xl xl:text-7xl">
           <SplitWords text={main} />
@@ -55,7 +55,7 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
             <Link href="/solicitar" className="btn-primary px-7 py-4 text-base dark:bg-accent dark:text-ink-950 dark:shadow-accent/20">{hero.ctaPrimary} <ArrowRight className="h-4 w-4" /></Link>
           </Magnetic>
           <Magnetic>
-            <Link href="/solicitar?tipo=levantamiento" className="btn border border-ink-900/20 px-7 py-4 text-base backdrop-blur hover:bg-ink-900/5">
+            <Link href="/solicitar?tipo=levantamiento" className="btn border border-ink-900/20 px-7 py-4 text-base backdrop-blur max-md:backdrop-blur-none hover:bg-ink-900/5">
               <CalendarCheck className="h-4 w-4" /> {hero.ctaSecondary}
             </Link>
           </Magnetic>
@@ -75,7 +75,7 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
       <motion.a href="#servicios" style={{ opacity }} className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2 text-xs tracking-[0.3em] text-ink-900/50 uppercase">
         Descubre
         <span className="grid h-10 w-6 place-items-start justify-center rounded-full border border-ink-900/25 p-1">
-          <ArrowDown className="h-3 w-3 animate-bounce" />
+          <ArrowDown className="h-3 w-3 animate-bounce max-md:[animation-iteration-count:3]" />
         </span>
       </motion.a>
     </section>
