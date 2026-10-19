@@ -1,9 +1,9 @@
 'use client';
 
-import { m, useScroll, useSpring, useTransform } from 'motion/react';
 import { ClipboardCheck, HardHat, Star } from 'lucide-react';
 import { useRef } from 'react';
 import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
+import { useScrollProgress } from '@/lib/scroll-fx';
 import type { Settings } from '@/lib/types';
 
 const PHASE_ICONS = [ClipboardCheck, HardHat, Star];
@@ -14,10 +14,14 @@ const PHASE_ICONS = [ClipboardCheck, HardHat, Star];
  */
 export function Process({ process }: { process: Settings['process'] }) {
   const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
+  const track = useRef<HTMLDivElement>(null);
+  const bar = useRef<HTMLDivElement>(null);
   const n = process.phases.length || 1;
-  const x = useTransform(scrollYProgress, [0, 1], ['0%', `-${((n - 1) / n) * 100}%`]);
-  const progress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
+  // Scroll vertical → las fases avanzan de lado (sin `motion`; ver lib/scroll-fx.ts)
+  useScrollProgress(ref, 'sticky', (p) => {
+    if (track.current) track.current.style.transform = `translate3d(${-((n - 1) / n) * 100 * p}%, 0, 0)`;
+    if (bar.current) bar.current.style.transform = `scaleX(${p})`;
+  });
 
   return (
     <section id="proceso" ref={ref} className="relative bg-ink-950 text-white" style={{ height: `${n * 100 + 20}vh` }}>
@@ -30,11 +34,11 @@ export function Process({ process }: { process: Settings['process'] }) {
             <p className="max-w-md text-white/60">{process.subtitle}</p>
           </div>
           <div className="mt-8 h-px w-full bg-white/10">
-            <m.div style={{ scaleX: progress }} className="h-px origin-left bg-accent" />
+            <div ref={bar} className="h-px origin-left scale-x-0 bg-accent transition-transform duration-150 ease-out" />
           </div>
         </div>
         <div className="relative z-10 flex flex-1 items-center">
-          <m.div style={{ x, width: `${n * 100}%` }} className="flex h-full shrink-0">
+          <div ref={track} style={{ width: `${n * 100}%` }} className="flex h-full shrink-0">
             {process.phases.map((phase, i) => {
               const Icon = PHASE_ICONS[i % PHASE_ICONS.length];
               return (
@@ -58,7 +62,7 @@ export function Process({ process }: { process: Settings['process'] }) {
                 </div>
               );
             })}
-          </m.div>
+          </div>
         </div>
       </div>
     </section>

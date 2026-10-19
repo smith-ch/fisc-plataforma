@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
-import { MotionProvider } from '@/components/MotionProvider';
 import { Providers } from '@/components/providers';
 import { ThemeProvider } from '@/components/theme';
 import { themeScript } from '@/lib/theme-script';
@@ -26,11 +25,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="font-sans">
-        <MotionProvider>
-          <ThemeProvider>
-            <Providers>{children}</Providers>
-          </ThemeProvider>
-        </MotionProvider>
+        <ThemeProvider>
+          <Providers>{children}</Providers>
+        </ThemeProvider>
       </body>
     </html>
   );

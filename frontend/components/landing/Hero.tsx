@@ -1,52 +1,63 @@
 'use client';
 
-import { m, useScroll, useTransform } from 'motion/react';
 import { ArrowDown, ArrowRight, CalendarCheck, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useRef } from 'react';
 import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
-import { LogoParallax, LogoShards, LogoStatic } from '@/components/fx/LogoParallax';
+import { LogoParallax, LogoShards } from '@/components/fx/LogoLazy';
+import { LogoStatic } from '@/components/fx/LogoPieces';
 import { Magnetic, SplitWords } from '@/components/fx/effects';
-import { useLightHero } from '@/lib/perf';
+import { useDesktopFx } from '@/lib/perf';
+import { useScrollProgress } from '@/lib/scroll-fx';
 import type { Settings } from '@/lib/types';
 
 type Target = React.RefObject<HTMLElement | null>;
 
 /*
- * Efectos de scroll del hero (solo escritorio). Cada uno es un componente aparte para que en móvil no haya ningún
- * `useScroll`/`useTransform` montado: el hero ligero usa elementos normales.
+ * Efectos de scroll del hero (solo escritorio), sin `motion`: un listener de scroll compartido (lib/scroll-fx.ts) que escribe `style`
+ * directamente. Siguen montados siempre con el mismo árbol (así al pasar a la versión ligera no se vuelve a montar el contenido);
+ * con `enabled` en falso (móvil o "reducir movimiento") no escuchan el scroll y dejan el elemento en reposo.
  */
-const OFFSET: ['start start', 'end start'] = ['start start', 'end start'];
 
 /** Al hacer scroll el contenido se aleja (escala + desvanecido) como en las landings de producto. */
-function ScrollOut({ target, className, children }: { target: Target; className?: string; children: React.ReactNode }) {
-  const { scrollYProgress } = useScroll({ target, offset: OFFSET });
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.88]);
-  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-  const y = useTransform(scrollYProgress, [0, 1], [0, 140]);
-  return <m.div style={{ scale, opacity, y }} className={className}>{children}</m.div>;
+function ScrollOut({ target, enabled, className, children }: { target: Target; enabled: boolean; className?: string; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useScrollProgress(target, 'hero', (p) => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transform = p ? `translate3d(0, ${140 * p}px, 0) scale(${1 - 0.12 * p})` : '';
+    el.style.opacity = p ? String(Math.max(0, 1 - p / 0.8)) : '';
+  }, enabled);
+  return <div ref={ref} className={className}>{children}</div>;
 }
 
 /** Parallax del fondo. */
-function ScrollBg({ target, children }: { target: Target; children: React.ReactNode }) {
-  const { scrollYProgress } = useScroll({ target, offset: OFFSET });
-  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '25%']);
-  return <m.div style={{ y: bgY }} className="absolute inset-0">{children}</m.div>;
+function ScrollBg({ target, enabled, children }: { target: Target; enabled: boolean; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useScrollProgress(target, 'hero', (p) => {
+    if (ref.current) ref.current.style.transform = p ? `translate3d(0, ${25 * p}%, 0)` : '';
+  }, enabled);
+  return <div ref={ref} className="absolute inset-0">{children}</div>;
 }
 
 const HINT_CLASS = 'absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2 text-xs tracking-[0.3em] text-ink-900/50 uppercase';
 
 /** Enlace "Descubre": se desvanece al bajar. */
-function ScrollHint({ target, children }: { target: Target; children: React.ReactNode }) {
-  const { scrollYProgress } = useScroll({ target, offset: OFFSET });
-  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-  return <m.a href="#servicios" style={{ opacity }} className={HINT_CLASS}>{children}</m.a>;
+function ScrollHint({ target, enabled, children }: { target: Target; enabled: boolean; children: React.ReactNode }) {
+  const ref = useRef<HTMLAnchorElement>(null);
+  useScrollProgress(target, 'hero', (p) => {
+    if (ref.current) ref.current.style.opacity = p ? String(Math.max(0, 1 - p / 0.8)) : '';
+  }, enabled);
+  return <a ref={ref} href="#servicios" className={HINT_CLASS}>{children}</a>;
 }
+
+/** Entrada escalonada del contenido del hero (animación CSS, ver `.fx-rise` en globals.css). */
+const rise = (y: number, dur: number, delay: number) => ({ '--y': `${y}px`, '--dur': `${dur}s`, '--d': `${delay}s` }) as React.CSSProperties;
 
 export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings['brand'] }) {
   const ref = useRef<HTMLElement>(null);
-  // Móvil o "reducir movimiento": hero ligero (sin fragmentos del logo, sin parallax ni efectos de scroll)
-  const light = useLightHero();
+  // Solo escritorio y sin "reducir movimiento" (y ya hidratado): parallax, fragmentos del logo y efectos de scroll; si no, hero ligero
+  const fx = useDesktopFx();
 
   // Última palabra del título en cursiva serif, como acento editorial
   const words = hero.title.split(' ');
@@ -67,20 +78,20 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
 
   const content = (
     <>
-      <m.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}
-        className="eyebrow mb-6 inline-flex items-center gap-2 rounded-full border border-ink-900/15 bg-ink-900/5 px-4 py-2 text-ink-900/80 backdrop-blur">
+      <p style={rise(12, 0.8, 0)}
+        className="fx-rise eyebrow mb-6 inline-flex items-center gap-2 rounded-full border border-ink-900/15 bg-ink-900/5 px-4 py-2 text-ink-900/80 backdrop-blur">
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand dark:bg-accent" /> {hero.eyebrow}
-      </m.p>
+      </p>
       <h1 className="text-5xl leading-[0.95] font-bold tracking-tight sm:text-6xl xl:text-7xl">
         <SplitWords text={main} />
         <SplitWords text={accent} delay={0.35} className="font-display font-normal text-brand-ink dark:text-accent" />
       </h1>
-      <m.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.6 }}
-        className="mt-8 max-w-2xl text-lg text-ink-900/70 sm:text-xl">
+      <p style={rise(20, 0.9, 0.6)}
+        className="fx-rise mt-8 max-w-2xl text-lg text-ink-900/70 sm:text-xl">
         {hero.subtitle}
-      </m.p>
-      <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.8 }}
-        className="mt-10 flex flex-wrap items-center gap-3">
+      </p>
+      <div style={rise(20, 0.9, 0.8)}
+        className="fx-rise mt-10 flex flex-wrap items-center gap-3">
         <Magnetic>
           <Link href="/solicitar" className="btn-primary px-7 py-4 text-base dark:bg-accent dark:text-ink-950 dark:shadow-accent/20">{hero.ctaPrimary} <ArrowRight className="h-4 w-4" /></Link>
         </Magnetic>
@@ -89,13 +100,13 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
             <CalendarCheck className="h-4 w-4" /> {hero.ctaSecondary}
           </Link>
         </Magnetic>
-      </m.div>
-      <m.ul initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 1.1 }}
-        className="mt-12 flex flex-wrap gap-x-8 gap-y-3 text-sm text-ink-900/70">
+      </div>
+      <ul style={rise(0, 1, 1.1)}
+        className="fx-rise mt-12 flex flex-wrap gap-x-8 gap-y-3 text-sm text-ink-900/70">
         {hero.highlights.map((h) => (
           <li key={h} className="flex items-center gap-2"><Check className="h-4 w-4 text-brand-ink dark:text-accent" /> {h}</li>
         ))}
-      </m.ul>
+      </ul>
     </>
   );
 
@@ -110,19 +121,19 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
 
   return (
     <section ref={ref} className="grain relative flex min-h-[100svh] items-center overflow-hidden bg-sand-50 text-ink-900 dark:bg-ink-950">
-      {light ? <div className="absolute inset-0">{bg}</div> : <ScrollBg target={ref}>{bg}</ScrollBg>}
+      <ScrollBg target={ref} enabled={fx}>{bg}</ScrollBg>
       <div className="absolute inset-0 bg-gradient-to-b from-sand-50/30 via-transparent to-sand-50 dark:from-ink-950/30 dark:to-ink-950" />
 
       <div className="container-x relative z-10 grid items-center gap-6 pt-28 pb-20 lg:grid-cols-12">
-      {light ? <div className="lg:col-span-7">{content}</div> : <ScrollOut target={ref} className="lg:col-span-7">{content}</ScrollOut>}
+      <ScrollOut target={ref} enabled={fx} className="lg:col-span-7">{content}</ScrollOut>
       <div className="order-first mx-auto w-44 sm:w-56 lg:order-none lg:col-span-5 lg:w-full lg:max-w-md">
         {/* Escritorio: símbolo animado (parallax, brillo, sombra). Móvil: símbolo estático sin filtros ni mezclas. */}
-        <div className="only-desktop">{!light && <LogoParallax scrollTarget={ref} />}</div>
+        <LogoParallax scrollTarget={ref} />
         <div className="only-mobile"><LogoStatic /></div>
       </div>
       </div>
 
-      {light ? <a href="#servicios" className={HINT_CLASS}>{hint}</a> : <ScrollHint target={ref}>{hint}</ScrollHint>}
+      <ScrollHint target={ref} enabled={fx}>{hint}</ScrollHint>
     </section>
   );
 }

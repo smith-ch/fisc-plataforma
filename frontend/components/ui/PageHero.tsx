@@ -1,5 +1,5 @@
 import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
-import { LogoShards } from '@/components/fx/LogoParallax';
+import { LogoShards } from '@/components/fx/LogoLazy';
 
 /** Cabecera oscura para páginas internas (misma estética que la portada). */
 export function PageHero({ eyebrow, title, subtitle, children }: { eyebrow?: string; title: string; subtitle?: string; children?: React.ReactNode }) {

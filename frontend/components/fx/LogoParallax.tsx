@@ -1,31 +1,9 @@
 'use client';
 
-import { m, useAnimationFrame, useMotionTemplate, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from 'motion/react';
-import Image from 'next/image';
-import { preload } from 'react-dom';
+import { motion, useAnimationFrame, useMotionTemplate, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from 'motion/react';
 import { useEffect, useRef } from 'react';
-import { useLightHero } from '@/lib/perf';
+import { PIECES, PieceImg, type Variant } from './LogoPieces';
 import { onPointerMove } from '@/lib/pointer';
-
-type Variant = 'white' | 'black' | 'auto';
-
-/**
- * Imagen de una pieza (WebP de 422×511 servido por next/image); con `auto` se
- * muestra la negra en claro y la blanca en oscuro. `sizes` es el ancho real con
- * que se pinta, para que el optimizador sirva el tamaño justo.
- */
-function PieceImg({ id, variant, sizes, className = '', style }: { id: string; variant: Variant; sizes: string; className?: string; style?: React.CSSProperties }) {
-  const img = (v: 'black' | 'white', cls: string) => (
-    <Image src={`/brand/piece-${id}-${v}.webp`} alt="" width={422} height={511} sizes={sizes} draggable={false} className={cls} style={style} />
-  );
-  if (variant !== 'auto') return img(variant, className);
-  return (
-    <>
-      {img('black', `${className} dark:hidden`)}
-      {img('white', `${className} hidden dark:block`)}
-    </>
-  );
-}
 
 /**
  * Cursor normalizado (-1..1). Si no hay puntero (móvil) o lleva un rato quieto,
@@ -53,29 +31,12 @@ function usePointer() {
   return { mx, my };
 }
 
-/**
- * Símbolo F.I.S.C. armado con sus 4 piezas (recortadas del logo oficial).
- * - Al cargar, las piezas llegan desde afuera y se ensamblan.
- * - Con el cursor, cada pieza se desplaza según su profundidad (parallax 3D)
- *   y el conjunto se inclina.
- * - Al hacer scroll las piezas se separan en una "vista explotada".
- */
-const PIECES = [
-  { id: 'f', depth: 18, explode: { x: -70, y: -60, r: -8 }, enter: { x: -260, y: -120 } },
-  { id: 's-top', depth: 38, explode: { x: 60, y: -30, r: 7 }, enter: { x: 240, y: -160 } },
-  { id: 's-mid', depth: 60, explode: { x: -30, y: 40, r: -6 }, enter: { x: -80, y: 220 } },
-  { id: 's-bottom', depth: 28, explode: { x: 40, y: 110, r: 6 }, enter: { x: 200, y: 260 } },
-] as const;
-
 export function LogoParallax({ variant = 'auto', className = '', scrollTarget }: {
   variant?: Variant;
   className?: string;
   /** Sección que controla la "explosión" con el scroll (por defecto el propio componente). */
   scrollTarget?: React.RefObject<HTMLElement | null>;
 }) {
-  // Las máscaras del brillo se descubren por CSS (tarde); se precargan para que la pieza no espere por ellas
-  // `media`: en móvil el hero usa `LogoStatic`, que no necesita estas máscaras.
-  for (const p of PIECES) preload(`/brand/piece-${p.id}-white.webp`, { as: 'image', media: '(min-width: 768px) and (pointer: fine)' });
   const ref = useRef<HTMLDivElement>(null);
   const { mx, my } = usePointer();
   const sx = useSpring(mx, { stiffness: 60, damping: 18 });
@@ -88,31 +49,13 @@ export function LogoParallax({ variant = 'auto', className = '', scrollTarget }:
 
   return (
     <div ref={ref} className={`relative [perspective:1200px] ${className}`}>
-      <m.div style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }} className="relative aspect-[422/511] w-full">
+      <motion.div style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }} className="relative aspect-[422/511] w-full">
         {/* Halo de luz detrás del símbolo: se desplaza en sentido contrario al cursor */}
         <Halo sx={sx} sy={sy} />
         {PIECES.map((p, i) => (
           <Piece key={p.id} piece={p} index={i} variant={variant} sx={sx} sy={sy} explode={explode} />
         ))}
-      </m.div>
-    </div>
-  );
-}
-
-/**
- * Versión ligera del símbolo para móvil y "reducir movimiento": las 4 piezas ensambladas, sin movimiento, sin `filter`
- * (ni blur ni drop-shadow), sin `mix-blend-mode` y sin hooks de scroll ni de puntero. El halo es un degradado radial, no un desenfoque.
- */
-export function LogoStatic({ variant = 'auto', className = '' }: { variant?: Variant; className?: string }) {
-  return (
-    <div className={`relative aspect-[422/511] w-full ${className}`}>
-      <div aria-hidden className="absolute inset-[4%] rounded-full"
-        style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--color-accent) 35%, transparent) 0%, transparent 68%)' }} />
-      {PIECES.map((p) => (
-        <div key={p.id} className="absolute inset-0">
-          <PieceImg id={p.id} variant={variant} sizes="(min-width: 640px) 224px, 176px" className="h-full w-full" />
-        </div>
-      ))}
+      </motion.div>
     </div>
   );
 }
@@ -121,9 +64,9 @@ function Halo({ sx, sy }: { sx: MotionValue<number>; sy: MotionValue<number> }) 
   const x = useTransform(sx, (v) => v * -30);
   const y = useTransform(sy, (v) => v * -30);
   return (
-    <m.div style={{ x, y }} className="absolute inset-[8%] rounded-full bg-accent/30 blur-3xl dark:bg-accent/25">
+    <motion.div style={{ x, y }} className="absolute inset-[8%] rounded-full bg-accent/30 blur-3xl dark:bg-accent/25">
       <div className="absolute inset-[25%] rounded-full bg-brand/40 blur-2xl dark:bg-white/10" />
-    </m.div>
+    </motion.div>
   );
 }
 
@@ -145,8 +88,8 @@ function Piece({ piece, index, variant, sx, sy, explode }: {
   const mask = `url(/brand/piece-${piece.id}-white.webp) center / 100% 100% no-repeat`;
 
   return (
-    <m.div className="absolute inset-0" style={{ x, y, rotate, z: piece.depth * 2 }}>
-      <m.div
+    <motion.div className="absolute inset-0" style={{ x, y, rotate, z: piece.depth * 2 }}>
+      <motion.div
         className="relative h-full w-full select-none"
         style={{ filter: shadow }}
         initial={{ opacity: 0, x: piece.enter.x, y: piece.enter.y, rotate: piece.explode.r * 3, scale: 0.8 }}
@@ -154,10 +97,10 @@ function Piece({ piece, index, variant, sx, sy, explode }: {
         transition={{ duration: 1.6, delay: 0.2 + index * 0.12, ease: [0.16, 1, 0.3, 1] }}
       >
         <PieceImg id={piece.id} variant={variant} sizes="(min-width: 1024px) 448px, 224px" className="h-full w-full" />
-        <m.div aria-hidden className="absolute inset-0 opacity-45 mix-blend-screen dark:opacity-100 dark:mix-blend-soft-light"
+        <motion.div aria-hidden className="absolute inset-0 opacity-45 mix-blend-screen dark:opacity-100 dark:mix-blend-soft-light"
           style={{ background: sheen, mask, WebkitMask: mask }} />
-      </m.div>
-    </m.div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -177,16 +120,7 @@ const SHARDS = [
   { id: 's-bottom', left: 2, top: 46, size: 60, depth: 0.1, rot: 80, blur: 5, o: 0.1 },
 ];
 
-/**
- * Campo de fragmentos del hero. En móvil y con "reducir movimiento" no se monta: son 8 piezas con `blur()`, animación continua,
- * `useScroll` y seguimiento de puntero. El HTML del servidor lo trae oculto por CSS (`.only-desktop`), así que no parpadea.
- */
-export function LogoShards({ variant = 'auto', scrollTarget }: { variant?: Variant; scrollTarget?: React.RefObject<HTMLElement | null> }) {
-  const light = useLightHero();
-  return <div className="only-desktop absolute inset-0">{!light && <ShardsField variant={variant} scrollTarget={scrollTarget} />}</div>;
-}
-
-function ShardsField({ variant, scrollTarget }: { variant: Variant; scrollTarget?: React.RefObject<HTMLElement | null> }) {
+export function ShardsField({ variant, scrollTarget }: { variant: Variant; scrollTarget?: React.RefObject<HTMLElement | null> }) {
   const { mx, my } = usePointer();
   const sx = useSpring(mx, { stiffness: 40, damping: 20 });
   const sy = useSpring(my, { stiffness: 40, damping: 20 });
@@ -206,11 +140,11 @@ function Shard({ s, sx, sy, scroll, variant, i }: {
   const y = useTransform([sy, scroll] as MotionValue[], ([v, p]: number[]) => -v * 60 * s.depth - p * 600 * s.depth);
   const rotate = useTransform(scroll, [0, 1], [s.rot, s.rot + 90 * s.depth * (i % 2 ? 1 : -1)]);
   return (
-    <m.div className="absolute" style={{ left: `${s.left}%`, top: `${s.top}%`, width: s.size, x, y, rotate }}>
-      <m.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 1.2, delay: 0.6 + i * 0.08 }}>
+    <motion.div className="absolute" style={{ left: `${s.left}%`, top: `${s.top}%`, width: s.size, x, y, rotate }}>
+      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 1.2, delay: 0.6 + i * 0.08 }}>
         <PieceImg id={s.id} variant={variant} sizes={`${s.size}px`} className="w-full animate-float"
           style={{ filter: `blur(${s.blur}px)`, opacity: s.o, animationDelay: `${i * -1.3}s`, animationDuration: `${7 + (i % 4) * 2}s` }} />
-      </m.div>
-    </m.div>
+      </motion.div>
+    </motion.div>
   );
 }
