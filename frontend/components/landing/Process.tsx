@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, useScroll, useSpring, useTransform } from 'motion/react';
+import { m, useScroll, useSpring, useTransform } from 'motion/react';
 import { ClipboardCheck, HardHat, Star } from 'lucide-react';
 import { useRef } from 'react';
 import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
@@ -30,11 +30,11 @@ export function Process({ process }: { process: Settings['process'] }) {
             <p className="max-w-md text-white/60">{process.subtitle}</p>
           </div>
           <div className="mt-8 h-px w-full bg-white/10">
-            <motion.div style={{ scaleX: progress }} className="h-px origin-left bg-accent" />
+            <m.div style={{ scaleX: progress }} className="h-px origin-left bg-accent" />
           </div>
         </div>
         <div className="relative z-10 flex flex-1 items-center">
-          <motion.div style={{ x, width: `${n * 100}%` }} className="flex h-full shrink-0">
+          <m.div style={{ x, width: `${n * 100}%` }} className="flex h-full shrink-0">
             {process.phases.map((phase, i) => {
               const Icon = PHASE_ICONS[i % PHASE_ICONS.length];
               return (
@@ -58,7 +58,7 @@ export function Process({ process }: { process: Settings['process'] }) {
                 </div>
               );
             })}
-          </motion.div>
+          </m.div>
         </div>
       </div>
     </section>

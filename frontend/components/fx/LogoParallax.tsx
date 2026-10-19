@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, useAnimationFrame, useMotionTemplate, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from 'motion/react';
+import { m, useAnimationFrame, useMotionTemplate, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from 'motion/react';
 import Image from 'next/image';
 import { preload } from 'react-dom';
 import { useEffect, useRef } from 'react';
@@ -88,13 +88,13 @@ export function LogoParallax({ variant = 'auto', className = '', scrollTarget }:
 
   return (
     <div ref={ref} className={`relative [perspective:1200px] ${className}`}>
-      <motion.div style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }} className="relative aspect-[422/511] w-full">
+      <m.div style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }} className="relative aspect-[422/511] w-full">
         {/* Halo de luz detrás del símbolo: se desplaza en sentido contrario al cursor */}
         <Halo sx={sx} sy={sy} />
         {PIECES.map((p, i) => (
           <Piece key={p.id} piece={p} index={i} variant={variant} sx={sx} sy={sy} explode={explode} />
         ))}
-      </motion.div>
+      </m.div>
     </div>
   );
 }
@@ -121,9 +121,9 @@ function Halo({ sx, sy }: { sx: MotionValue<number>; sy: MotionValue<number> }) 
   const x = useTransform(sx, (v) => v * -30);
   const y = useTransform(sy, (v) => v * -30);
   return (
-    <motion.div style={{ x, y }} className="absolute inset-[8%] rounded-full bg-accent/30 blur-3xl dark:bg-accent/25">
+    <m.div style={{ x, y }} className="absolute inset-[8%] rounded-full bg-accent/30 blur-3xl dark:bg-accent/25">
       <div className="absolute inset-[25%] rounded-full bg-brand/40 blur-2xl dark:bg-white/10" />
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -145,8 +145,8 @@ function Piece({ piece, index, variant, sx, sy, explode }: {
   const mask = `url(/brand/piece-${piece.id}-white.webp) center / 100% 100% no-repeat`;
 
   return (
-    <motion.div className="absolute inset-0" style={{ x, y, rotate, z: piece.depth * 2 }}>
-      <motion.div
+    <m.div className="absolute inset-0" style={{ x, y, rotate, z: piece.depth * 2 }}>
+      <m.div
         className="relative h-full w-full select-none"
         style={{ filter: shadow }}
         initial={{ opacity: 0, x: piece.enter.x, y: piece.enter.y, rotate: piece.explode.r * 3, scale: 0.8 }}
@@ -154,10 +154,10 @@ function Piece({ piece, index, variant, sx, sy, explode }: {
         transition={{ duration: 1.6, delay: 0.2 + index * 0.12, ease: [0.16, 1, 0.3, 1] }}
       >
         <PieceImg id={piece.id} variant={variant} sizes="(min-width: 1024px) 448px, 224px" className="h-full w-full" />
-        <motion.div aria-hidden className="absolute inset-0 opacity-45 mix-blend-screen dark:opacity-100 dark:mix-blend-soft-light"
+        <m.div aria-hidden className="absolute inset-0 opacity-45 mix-blend-screen dark:opacity-100 dark:mix-blend-soft-light"
           style={{ background: sheen, mask, WebkitMask: mask }} />
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }
 
@@ -206,11 +206,11 @@ function Shard({ s, sx, sy, scroll, variant, i }: {
   const y = useTransform([sy, scroll] as MotionValue[], ([v, p]: number[]) => -v * 60 * s.depth - p * 600 * s.depth);
   const rotate = useTransform(scroll, [0, 1], [s.rot, s.rot + 90 * s.depth * (i % 2 ? 1 : -1)]);
   return (
-    <motion.div className="absolute" style={{ left: `${s.left}%`, top: `${s.top}%`, width: s.size, x, y, rotate }}>
-      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 1.2, delay: 0.6 + i * 0.08 }}>
+    <m.div className="absolute" style={{ left: `${s.left}%`, top: `${s.top}%`, width: s.size, x, y, rotate }}>
+      <m.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 1.2, delay: 0.6 + i * 0.08 }}>
         <PieceImg id={s.id} variant={variant} sizes={`${s.size}px`} className="w-full animate-float"
           style={{ filter: `blur(${s.blur}px)`, opacity: s.o, animationDelay: `${i * -1.3}s`, animationDuration: `${7 + (i % 4) * 2}s` }} />
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

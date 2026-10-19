@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --check \"app/**/*.{ts,tsx}\" \"components/**/*.{ts,tsx}\" \"lib/**/*.ts\"",
-    "format:write": "prettier --write \"app/**/*.{ts,tsx}\" \"components/**/*.{ts,tsx}\" \"lib/**/*.ts\""
+    "format:write": "prettier --write \"app/**/*.{ts,tsx}\" \"components/**/*.{ts,tsx}\" \"lib/**/*.ts\"",
+    "analyze": "node -e \"process.env.ANALYZE='true';process.exit(require('child_process').spawnSync('npx',['next','build'],{stdio:'inherit',shell:true,env:process.env}).status)\""
   },
   "dependencies": {
     "lenis": "^1.3.26",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
+    "@next/bundle-analyzer": "^15.5.28",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^22.20.4",
     "@types/react": "^19.3.0",

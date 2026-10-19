@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, useScroll, useTransform } from 'motion/react';
+import { m, useScroll, useTransform } from 'motion/react';
 import { ArrowDown, ArrowRight, CalendarCheck, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useRef } from 'react';
@@ -24,14 +24,14 @@ function ScrollOut({ target, className, children }: { target: Target; className?
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.88]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
   const y = useTransform(scrollYProgress, [0, 1], [0, 140]);
-  return <motion.div style={{ scale, opacity, y }} className={className}>{children}</motion.div>;
+  return <m.div style={{ scale, opacity, y }} className={className}>{children}</m.div>;
 }
 
 /** Parallax del fondo. */
 function ScrollBg({ target, children }: { target: Target; children: React.ReactNode }) {
   const { scrollYProgress } = useScroll({ target, offset: OFFSET });
   const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '25%']);
-  return <motion.div style={{ y: bgY }} className="absolute inset-0">{children}</motion.div>;
+  return <m.div style={{ y: bgY }} className="absolute inset-0">{children}</m.div>;
 }
 
 const HINT_CLASS = 'absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2 text-xs tracking-[0.3em] text-ink-900/50 uppercase';
@@ -40,7 +40,7 @@ const HINT_CLASS = 'absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-c
 function ScrollHint({ target, children }: { target: Target; children: React.ReactNode }) {
   const { scrollYProgress } = useScroll({ target, offset: OFFSET });
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-  return <motion.a href="#servicios" style={{ opacity }} className={HINT_CLASS}>{children}</motion.a>;
+  return <m.a href="#servicios" style={{ opacity }} className={HINT_CLASS}>{children}</m.a>;
 }
 
 export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings['brand'] }) {
@@ -67,19 +67,19 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
 
   const content = (
     <>
-      <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}
+      <m.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}
         className="eyebrow mb-6 inline-flex items-center gap-2 rounded-full border border-ink-900/15 bg-ink-900/5 px-4 py-2 text-ink-900/80 backdrop-blur">
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand dark:bg-accent" /> {hero.eyebrow}
-      </motion.p>
+      </m.p>
       <h1 className="text-5xl leading-[0.95] font-bold tracking-tight sm:text-6xl xl:text-7xl">
         <SplitWords text={main} />
         <SplitWords text={accent} delay={0.35} className="font-display font-normal text-brand-ink dark:text-accent" />
       </h1>
-      <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.6 }}
+      <m.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.6 }}
         className="mt-8 max-w-2xl text-lg text-ink-900/70 sm:text-xl">
         {hero.subtitle}
-      </motion.p>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.8 }}
+      </m.p>
+      <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.8 }}
         className="mt-10 flex flex-wrap items-center gap-3">
         <Magnetic>
           <Link href="/solicitar" className="btn-primary px-7 py-4 text-base dark:bg-accent dark:text-ink-950 dark:shadow-accent/20">{hero.ctaPrimary} <ArrowRight className="h-4 w-4" /></Link>
@@ -89,13 +89,13 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
             <CalendarCheck className="h-4 w-4" /> {hero.ctaSecondary}
           </Link>
         </Magnetic>
-      </motion.div>
-      <motion.ul initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 1.1 }}
+      </m.div>
+      <m.ul initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 1.1 }}
         className="mt-12 flex flex-wrap gap-x-8 gap-y-3 text-sm text-ink-900/70">
         {hero.highlights.map((h) => (
           <li key={h} className="flex items-center gap-2"><Check className="h-4 w-4 text-brand-ink dark:text-accent" /> {h}</li>
         ))}
-      </motion.ul>
+      </m.ul>
     </>
   );
 

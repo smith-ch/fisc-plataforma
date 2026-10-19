@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, useInView, useMotionValue, useScroll, useSpring, useTransform } from 'motion/react';
+import { m, useInView, useMotionValue, useScroll, useSpring, useTransform } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { isLowPowerDevice } from '@/lib/perf';
 import { hasFinePointer } from '@/lib/pointer';
@@ -41,7 +41,7 @@ export function SmoothScroll() {
 /** Aparición al entrar en pantalla. */
 export function Reveal({ children, delay = 0, y = 32, className = '' }: { children: React.ReactNode; delay?: number; y?: number; className?: string }) {
   return (
-    <motion.div
+    <m.div
       className={className}
       initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -49,7 +49,7 @@ export function Reveal({ children, delay = 0, y = 32, className = '' }: { childr
       transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -59,14 +59,14 @@ export function SplitWords({ text, className = '', delay = 0 }: { text: string; 
     <span className={className}>
       {text.split(' ').map((word, i) => (
         <span key={i} className="inline-block overflow-hidden pb-[0.12em] align-bottom">
-          <motion.span
+          <m.span
             className="inline-block"
             initial={{ y: '110%' }}
             animate={{ y: 0 }}
             transition={{ duration: 0.9, delay: delay + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
           >
             {word}&nbsp;
-          </motion.span>
+          </m.span>
         </span>
       ))}
     </span>
@@ -90,7 +90,7 @@ export function SpotlightCard({ children, className = '', tilt = true }: { child
   }
 
   return (
-    <motion.div
+    <m.div
       ref={ref}
       onPointerMove={onMove}
       onPointerLeave={() => { rx.set(0); ry.set(0); }}
@@ -98,7 +98,7 @@ export function SpotlightCard({ children, className = '', tilt = true }: { child
       className={`spotlight ${className}`}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -108,7 +108,7 @@ export function Magnetic({ children, strength = 0.3 }: { children: React.ReactNo
   const x = useSpring(0, { stiffness: 250, damping: 18 });
   const y = useSpring(0, { stiffness: 250, damping: 18 });
   return (
-    <motion.div
+    <m.div
       ref={ref}
       className="inline-block"
       style={{ x, y }}
@@ -121,7 +121,7 @@ export function Magnetic({ children, strength = 0.3 }: { children: React.ReactNo
       onPointerLeave={() => { x.set(0); y.set(0); }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -130,7 +130,7 @@ export function Parallax({ children, offset = 80, className = '' }: { children: 
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
   const y = useTransform(scrollYProgress, [0, 1], [offset, -offset]);
-  return <motion.div ref={ref} style={{ y }} className={className}>{children}</motion.div>;
+  return <m.div ref={ref} style={{ y }} className={className}>{children}</m.div>;
 }
 
 /** Contador animado (ej. "100%", "24h", "10+"). */
@@ -160,5 +160,5 @@ export function CountUp({ value }: { value: string }) {
 export function ScrollProgress() {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 30 });
-  return <motion.div style={{ scaleX }} className="fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-accent" />;
+  return <m.div style={{ scaleX }} className="fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-accent" />;
 }
