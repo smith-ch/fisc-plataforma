@@ -37,20 +37,17 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
 
       <div className="container-x relative z-10 grid items-center gap-6 pt-28 pb-20 lg:grid-cols-12">
       <motion.div style={{ scale, opacity, y }} className="lg:col-span-7">
-        <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}
-          className="eyebrow mb-6 inline-flex items-center gap-2 rounded-full border border-ink-900/15 bg-ink-900/5 px-4 py-2 text-ink-900/80 backdrop-blur">
+        <p className="enter eyebrow mb-6 inline-flex items-center gap-2 rounded-full border border-ink-900/15 bg-ink-900/5 px-4 py-2 text-ink-900/80 backdrop-blur">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand dark:bg-accent" /> {hero.eyebrow}
-        </motion.p>
+        </p>
         <h1 className="text-5xl leading-[0.95] font-bold tracking-tight sm:text-6xl xl:text-7xl">
           <SplitWords text={main} />
-          <SplitWords text={accent} delay={0.35} className="font-display font-normal text-brand-ink dark:text-accent" />
+          <SplitWords text={accent} delay={0.2} className="font-display font-normal text-brand-ink dark:text-accent" />
         </h1>
-        <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.6 }}
-          className="mt-8 max-w-2xl text-lg text-ink-900/70 sm:text-xl">
+        <p className="enter mt-8 max-w-2xl text-lg text-ink-900/70 sm:text-xl" style={{ '--d': '0.3s' } as React.CSSProperties}>
           {hero.subtitle}
-        </motion.p>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.8 }}
-          className="mt-10 flex flex-wrap items-center gap-3">
+        </p>
+        <div className="enter mt-10 flex flex-wrap items-center gap-3" style={{ '--d': '0.4s' } as React.CSSProperties}>
           <Magnetic>
             <Link href="/solicitar" className="btn-primary px-7 py-4 text-base dark:bg-accent dark:text-ink-950 dark:shadow-accent/20">{hero.ctaPrimary} <ArrowRight className="h-4 w-4" /></Link>
           </Magnetic>
@@ -59,13 +56,12 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
               <CalendarCheck className="h-4 w-4" /> {hero.ctaSecondary}
             </Link>
           </Magnetic>
-        </motion.div>
-        <motion.ul initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 1.1 }}
-          className="mt-12 flex flex-wrap gap-x-8 gap-y-3 text-sm text-ink-900/70">
+        </div>
+        <ul className="enter mt-12 flex flex-wrap gap-x-8 gap-y-3 text-sm text-ink-900/70" style={{ '--d': '0.5s' } as React.CSSProperties}>
           {hero.highlights.map((h) => (
             <li key={h} className="flex items-center gap-2"><Check className="h-4 w-4 text-brand-ink dark:text-accent" /> {h}</li>
           ))}
-        </motion.ul>
+        </ul>
       </motion.div>
       <div className="order-first mx-auto w-44 sm:w-56 lg:order-none lg:col-span-5 lg:w-full lg:max-w-md">
         <LogoParallax scrollTarget={ref} />

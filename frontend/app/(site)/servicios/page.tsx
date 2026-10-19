@@ -15,9 +15,9 @@ export default async function ServicesPage() {
       <PageHero eyebrow="Catálogo" title="Servicios para cada etapa de tu espacio"
         subtitle="Agrega uno o varios servicios a tu solicitud. Hacemos un solo levantamiento y te enviamos una cotización unificada." />
       <div className="container-x space-y-20 py-20">
-        {pillars.map((p) => (
+        {pillars.map((p, pi) => (
           <section key={p.id} id={p.slug}>
-            <Reveal>
+            <Reveal above={pi === 0}>
               <div className="mb-8 flex items-end gap-4 border-b border-ink-900/10 pb-5">
                 <span className="font-display text-6xl font-bold text-ink-900/10">{p.code}</span>
                 <div>

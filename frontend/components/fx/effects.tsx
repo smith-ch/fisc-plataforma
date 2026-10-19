@@ -37,12 +37,15 @@ export function SmoothScroll() {
   return null;
 }
 
-/** Aparición al entrar en pantalla. */
-export function Reveal({ children, delay = 0, y = 32, className = '' }: { children: React.ReactNode; delay?: number; y?: number; className?: string }) {
+/**
+ * Aparición al entrar en pantalla. `above` es para lo que ya está en la primera pantalla: no parte de `opacity: 0`
+ * (se ve en el HTML del servidor) y solo hace el desplazamiento.
+ */
+export function Reveal({ children, delay = 0, y = 32, className = '', above = false }: { children: React.ReactNode; delay?: number; y?: number; className?: string; above?: boolean }) {
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y }}
+      initial={above ? { y } : { opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-80px' }}
       transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
@@ -52,20 +55,17 @@ export function Reveal({ children, delay = 0, y = 32, className = '' }: { childr
   );
 }
 
-/** Titular que aparece palabra por palabra. */
+/**
+ * Titular que sube palabra por palabra. El texto está en el HTML del servidor y se ve desde el primer render:
+ * la animación (CSS, `.split-word`) solo lo desplaza unos píxeles y nunca lo oculta, ni siquiera sin JavaScript.
+ * En móvil y con "reducir movimiento" no se anima (ver globals.css).
+ */
 export function SplitWords({ text, className = '', delay = 0 }: { text: string; className?: string; delay?: number }) {
   return (
     <span className={className}>
       {text.split(' ').map((word, i) => (
-        <span key={i} className="inline-block overflow-hidden pb-[0.12em] align-bottom">
-          <motion.span
-            className="inline-block"
-            initial={{ y: '110%' }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.9, delay: delay + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {word}&nbsp;
-          </motion.span>
+        <span key={i} className="split-word inline-block" style={{ '--d': `${delay + i * 0.06}s` } as React.CSSProperties}>
+          {word}&nbsp;
         </span>
       ))}
     </span>
