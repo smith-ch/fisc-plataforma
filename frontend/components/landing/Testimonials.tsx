@@ -1,6 +1,7 @@
 import { Quote, Star } from 'lucide-react';
 import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
 import { Reveal } from '@/components/fx/effects';
+import { ContentImage } from '@/components/ui/ContentImage';
 import type { Testimonial } from '@/lib/types';
 
 export function Testimonials({ items }: { items: Testimonial[] }) {
@@ -24,8 +25,7 @@ export function Testimonials({ items }: { items: Testimonial[] }) {
             <blockquote className="mt-4 text-ink-900/80">“{t.text}”</blockquote>
             <figcaption className="mt-5 flex items-center gap-3">
               {t.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={t.avatarUrl} alt="" loading="lazy" decoding="async" className="h-10 w-10 rounded-full object-cover" />
+                <ContentImage src={t.avatarUrl} alt="" width={40} height={40} sizes="40px" className="h-10 w-10 rounded-full object-cover" />
               ) : <span className="grid h-10 w-10 place-items-center rounded-full bg-brand text-sm font-bold text-white">{t.name[0]}</span>}
               <span>
                 <span className="block text-sm font-bold">{t.name}</span>

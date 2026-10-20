@@ -5,6 +5,7 @@ import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
 import { PillarCard } from '@/components/fx/PillarCard';
 import { Reveal, SpotlightCard } from '@/components/fx/effects';
 import { AddToCart } from '@/components/site/AddToCart';
+import { ContentImage } from '@/components/ui/ContentImage';
 import type { Pillar } from '@/lib/types';
 
 /**
@@ -54,8 +55,9 @@ function PillarScene({ pillar, index }: { pillar: Pillar; index: number }) {
               <SpotlightCard className="card group h-full overflow-hidden rounded-3xl">
                 <Link href={`/servicios/${s.slug}`} className="flex h-full flex-col p-6">
                   {s.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={s.imageUrl} alt={s.name} loading="lazy" decoding="async" className="-mx-6 -mt-6 mb-5 h-40 w-[calc(100%+3rem)] max-w-none object-cover transition duration-700 group-hover:scale-105" />
+                    <span className="relative -mx-6 -mt-6 mb-5 block h-40 w-[calc(100%+3rem)] max-w-none overflow-hidden bg-ink-900/5">
+                      <ContentImage src={s.imageUrl} alt={s.name} sizes="(min-width: 1024px) 320px, (min-width: 640px) 50vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
+                    </span>
                   ) : (
                     <span className="mb-5 grid h-12 w-12 place-items-center rounded-2xl transition duration-500 group-hover:scale-110 group-hover:rotate-6"
                       style={{ background: `${color}18`, color }}>
