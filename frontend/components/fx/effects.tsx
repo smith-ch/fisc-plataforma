@@ -39,26 +39,31 @@ export function SmoothScroll() {
   return null;
 }
 
-/** Aparición al entrar en pantalla (CSS + un IntersectionObserver compartido; ver `.reveal` en globals.css). */
-export function Reveal({ children, delay = 0, y = 32, className = '' }: { children: React.ReactNode; delay?: number; y?: number; className?: string }) {
+/**
+ * Aparición al entrar en pantalla (CSS + un IntersectionObserver compartido; ver `.reveal` en globals.css). `above` es para lo que ya
+ * está en la primera pantalla: no parte de `opacity: 0` (se ve en el HTML del servidor) y solo hace el desplazamiento.
+ */
+export function Reveal({ children, delay = 0, y = 32, className = '', above = false }: { children: React.ReactNode; delay?: number; y?: number; className?: string; above?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => onceInView(ref.current!, () => ref.current?.classList.add('is-in'), '0px 0px -80px 0px'), []);
   return (
-    <div ref={ref} className={`reveal ${className}`} style={{ '--ry': `${y}px`, '--rd': `${delay}s` } as React.CSSProperties}>
+    <div ref={ref} className={`reveal ${above ? 'reveal-above ' : ''}${className}`} style={{ '--ry': `${y}px`, '--rd': `${delay}s` } as React.CSSProperties}>
       {children}
     </div>
   );
 }
 
-/** Titular que aparece palabra por palabra (animación CSS: arranca con la hoja de estilos, sin esperar a React). */
+/**
+ * Titular que sube palabra por palabra. El texto está en el HTML del servidor y se ve desde el primer render:
+ * la animación (CSS, `.split-word`) solo lo desplaza unos píxeles y nunca lo oculta, ni siquiera sin JavaScript.
+ * En móvil y con "reducir movimiento" no se anima (ver globals.css).
+ */
 export function SplitWords({ text, className = '', delay = 0 }: { text: string; className?: string; delay?: number }) {
   return (
     <span className={className}>
       {text.split(' ').map((word, i) => (
-        <span key={i} className="inline-block overflow-hidden pb-[0.12em] align-bottom">
-          <span className="fx-rise inline-block" style={{ '--y': '110%', '--o': 1, '--dur': '0.9s', '--d': `${delay + i * 0.06}s` } as React.CSSProperties}>
-            {word}&nbsp;
-          </span>
+        <span key={i} className="split-word inline-block" style={{ '--d': `${delay + i * 0.06}s` } as React.CSSProperties}>
+          {word}&nbsp;
         </span>
       ))}
     </span>

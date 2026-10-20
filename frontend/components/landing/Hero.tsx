@@ -52,7 +52,8 @@ function ScrollHint({ target, enabled, children }: { target: Target; enabled: bo
 }
 
 /** Entrada escalonada del contenido del hero (animación CSS, ver `.fx-rise` en globals.css). */
-const rise = (y: number, dur: number, delay: number) => ({ '--y': `${y}px`, '--dur': `${dur}s`, '--d': `${delay}s` }) as React.CSSProperties;
+// Entrada del texto del hero: nunca parte de `opacity: 0` (`--o: 1`): se ve en el HTML del servidor y solo se desplaza. En móvil no se anima (`.fx-hero`).
+const rise = (y: number, dur: number, delay: number) => ({ '--y': `${y}px`, '--o': 1, '--dur': `${dur}s`, '--d': `${delay}s` }) as React.CSSProperties;
 
 export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings['brand'] }) {
   const ref = useRef<HTMLElement>(null);
@@ -79,7 +80,7 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
   const content = (
     <>
       <p style={rise(12, 0.8, 0)}
-        className="fx-rise eyebrow mb-6 inline-flex items-center gap-2 rounded-full border border-ink-900/15 bg-ink-900/5 px-4 py-2 text-ink-900/80 backdrop-blur max-md:backdrop-blur-none">
+        className="fx-rise fx-hero eyebrow mb-6 inline-flex items-center gap-2 rounded-full border border-ink-900/15 bg-ink-900/5 px-4 py-2 text-ink-900/80 backdrop-blur max-md:backdrop-blur-none">
         <span className="h-1.5 w-1.5 animate-pulse max-md:[animation-iteration-count:3] rounded-full bg-brand dark:bg-accent" /> {hero.eyebrow}
       </p>
       <h1 className="text-5xl leading-[0.95] font-bold tracking-tight sm:text-6xl xl:text-7xl">
@@ -87,11 +88,11 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
         <SplitWords text={accent} delay={0.35} className="font-display font-normal text-brand-ink dark:text-accent" />
       </h1>
       <p style={rise(20, 0.9, 0.6)}
-        className="fx-rise mt-8 max-w-2xl text-lg text-ink-900/70 sm:text-xl">
+        className="fx-rise fx-hero mt-8 max-w-2xl text-lg text-ink-900/70 sm:text-xl">
         {hero.subtitle}
       </p>
       <div style={rise(20, 0.9, 0.8)}
-        className="fx-rise mt-10 flex flex-wrap items-center gap-3">
+        className="fx-rise fx-hero mt-10 flex flex-wrap items-center gap-3">
         <Magnetic>
           <Link href="/solicitar" className="btn-primary px-7 py-4 text-base dark:bg-accent dark:text-ink-950 dark:shadow-accent/20">{hero.ctaPrimary} <ArrowRight className="h-4 w-4" /></Link>
         </Magnetic>
@@ -102,7 +103,7 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
         </Magnetic>
       </div>
       <ul style={rise(0, 1, 1.1)}
-        className="fx-rise mt-12 flex flex-wrap gap-x-8 gap-y-3 text-sm text-ink-900/70">
+        className="fx-rise fx-hero mt-12 flex flex-wrap gap-x-8 gap-y-3 text-sm text-ink-900/70">
         {hero.highlights.map((h) => (
           <li key={h} className="flex items-center gap-2"><Check className="h-4 w-4 text-brand-ink dark:text-accent" /> {h}</li>
         ))}

@@ -8,7 +8,7 @@ import './globals.css';
 
 // Tipografías de la guía de marca F.I.S.C.
 const body = Inter({ subsets: ['latin'], variable: '--font-body', display: 'swap' });
-const display = Space_Grotesk({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-display-face', display: 'swap' });
+const display = Space_Grotesk({ subsets: ['latin'], variable: '--font-display-face', display: 'swap' });
 
 export async function generateMetadata(): Promise<Metadata> {
   const { settings } = await getContent();
