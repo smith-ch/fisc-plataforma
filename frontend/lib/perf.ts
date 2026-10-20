@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 
 /**
  * Pantalla chica o táctil: lo que de verdad define si el equipo es "móvil" (no solo núcleos o memoria, que deja fuera
@@ -57,4 +57,24 @@ export function useDesktopFx(): boolean {
     () => !matchesMedia(LIGHT_HERO_QUERY),
     () => false,
   );
+}
+
+/**
+ * `true` pasados `ms` milisegundos desde el montaje, y solo cuando el navegador queda libre (`requestIdleCallback`). Sirve para no empezar
+ * trabajo pesado (efectos interactivos, fondos animados) mientras corre la animación de entrada: así la entrada tiene todos los fotogramas.
+ */
+export function useAfterEntrance(ms = 1300): boolean {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let idle = 0;
+    const t = window.setTimeout(() => {
+      if ('requestIdleCallback' in window) idle = window.requestIdleCallback(() => setReady(true), { timeout: 600 });
+      else setReady(true);
+    }, ms);
+    return () => {
+      window.clearTimeout(t);
+      if (idle && 'cancelIdleCallback' in window) window.cancelIdleCallback(idle);
+    };
+  }, [ms]);
+  return ready;
 }

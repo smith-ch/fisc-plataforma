@@ -1,8 +1,8 @@
 'use client';
 
-import { motion, useAnimationFrame, useMotionTemplate, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from 'motion/react';
+import { motion, useAnimationFrame, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from 'motion/react';
 import { useEffect, useRef } from 'react';
-import { PIECES, PieceImg, type Variant } from './LogoPieces';
+import { PieceImg, type Variant } from './LogoPieces';
 import { onPointerMove } from '@/lib/pointer';
 
 /**
@@ -22,86 +22,16 @@ function usePointer() {
     my.set((e.clientY / window.innerHeight) * 2 - 1);
   }), [mx, my]);
 
+  // La órbita automática solo corre los primeros 8 s (si el cursor no se ha movido): después el símbolo queda quieto y no repinta
+  // piezas, sombras y brillos en cada fotograma para siempre. En cuanto el cursor se mueve, vuelve a seguirlo.
+  const born = useRef(typeof performance === 'undefined' ? 0 : performance.now());
   useAnimationFrame((now) => {
-    if (reduced || performance.now() - lastMove.current < 3500) return;
+    if (reduced || performance.now() - lastMove.current < 3500 || now - born.current > 8000) return;
     mx.set(Math.sin(now * 0.00045) * 0.55);
     my.set(Math.cos(now * 0.00032) * 0.4);
   });
 
   return { mx, my };
-}
-
-export function LogoParallax({ variant = 'auto', className = '', scrollTarget }: {
-  variant?: Variant;
-  className?: string;
-  /** Sección que controla la "explosión" con el scroll (por defecto el propio componente). */
-  scrollTarget?: React.RefObject<HTMLElement | null>;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { mx, my } = usePointer();
-  const sx = useSpring(mx, { stiffness: 60, damping: 18 });
-  const sy = useSpring(my, { stiffness: 60, damping: 18 });
-  const rotateY = useTransform(sx, [-1, 1], [-14, 14]);
-  const rotateX = useTransform(sy, [-1, 1], [12, -12]);
-
-  const { scrollYProgress } = useScroll({ target: scrollTarget ?? ref, offset: ['start start', 'end start'] });
-  const explode = useSpring(useTransform(scrollYProgress, [0, 0.7], [0, 1]), { stiffness: 80, damping: 20 });
-
-  return (
-    <div ref={ref} className={`relative [perspective:1200px] ${className}`}>
-      <motion.div style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }} className="relative aspect-[422/511] w-full">
-        {/* Halo de luz detrás del símbolo: se desplaza en sentido contrario al cursor */}
-        <Halo sx={sx} sy={sy} />
-        {PIECES.map((p, i) => (
-          <Piece key={p.id} piece={p} index={i} variant={variant} sx={sx} sy={sy} explode={explode} />
-        ))}
-      </motion.div>
-    </div>
-  );
-}
-
-function Halo({ sx, sy }: { sx: MotionValue<number>; sy: MotionValue<number> }) {
-  const x = useTransform(sx, (v) => v * -30);
-  const y = useTransform(sy, (v) => v * -30);
-  return (
-    <motion.div style={{ x, y }} className="absolute inset-[8%] rounded-full bg-accent/30 blur-3xl dark:bg-accent/25">
-      <div className="absolute inset-[25%] rounded-full bg-brand/40 blur-2xl dark:bg-white/10" />
-    </motion.div>
-  );
-}
-
-function Piece({ piece, index, variant, sx, sy, explode }: {
-  piece: (typeof PIECES)[number]; index: number; variant: Variant;
-  sx: MotionValue<number>; sy: MotionValue<number>; explode: MotionValue<number>;
-}) {
-  const x = useTransform([sx, explode] as MotionValue[], ([m, e]: number[]) => m * piece.depth + e * piece.explode.x);
-  const y = useTransform([sy, explode] as MotionValue[], ([m, e]: number[]) => m * piece.depth + e * piece.explode.y);
-  const rotate = useTransform(explode, [0, 1], [0, piece.explode.r]);
-  // Reflejo especular: un foco de luz recortado con la silueta de la pieza que
-  // se mueve con el cursor (las piezas más cercanas lo desplazan más).
-  const lx = useTransform(sx, (v) => `${50 + v * (30 + piece.depth * 0.4)}%`);
-  const ly = useTransform(sy, (v) => `${45 + v * (30 + piece.depth * 0.4)}%`);
-  const sheen = useMotionTemplate`radial-gradient(circle at ${lx} ${ly}, rgba(255,255,255,.85) 0%, rgba(255,255,255,.25) 18%, transparent 42%)`;
-  // Sombra proyectada hacia el lado opuesto a la luz: da sensación de volumen
-  const shadow = useTransform([sx, sy] as MotionValue[], ([a, b]: number[]) =>
-    `drop-shadow(${-a * piece.depth * 0.35}px ${12 - b * piece.depth * 0.35}px ${10 + piece.depth * 0.25}px rgba(0,0,0,.28))`);
-  const mask = `url(/brand/piece-${piece.id}-white.webp) center / 100% 100% no-repeat`;
-
-  return (
-    <motion.div className="absolute inset-0" style={{ x, y, rotate, z: piece.depth * 2 }}>
-      <motion.div
-        className="relative h-full w-full select-none"
-        style={{ filter: shadow }}
-        initial={{ opacity: 0, x: piece.enter.x, y: piece.enter.y, rotate: piece.explode.r * 3, scale: 0.8 }}
-        animate={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }}
-        transition={{ duration: 1.6, delay: 0.2 + index * 0.12, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <PieceImg id={piece.id} variant={variant} sizes="(min-width: 1024px) 448px, 224px" className="h-full w-full" />
-        <motion.div aria-hidden className="absolute inset-0 opacity-45 mix-blend-screen dark:opacity-100 dark:mix-blend-soft-light"
-          style={{ background: sheen, mask, WebkitMask: mask }} />
-      </motion.div>
-    </motion.div>
-  );
 }
 
 /**
@@ -141,10 +71,10 @@ function Shard({ s, sx, sy, scroll, variant, i }: {
   const rotate = useTransform(scroll, [0, 1], [s.rot, s.rot + 90 * s.depth * (i % 2 ? 1 : -1)]);
   return (
     <motion.div className="absolute" style={{ left: `${s.left}%`, top: `${s.top}%`, width: s.size, x, y, rotate }}>
-      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 1.2, delay: 0.6 + i * 0.08 }}>
+      <div className="shard-in" style={{ '--d': `${i * 0.06}s` } as React.CSSProperties}>
         <PieceImg id={s.id} variant={variant} sizes={`${s.size}px`} className="w-full animate-float"
           style={{ filter: `blur(${s.blur}px)`, opacity: s.o, animationDelay: `${i * -1.3}s`, animationDuration: `${7 + (i % 4) * 2}s` }} />
-      </motion.div>
+      </div>
     </motion.div>
   );
 }

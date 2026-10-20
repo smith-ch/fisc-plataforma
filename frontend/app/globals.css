@@ -71,9 +71,23 @@ html.theme-transition, html.theme-transition *, html.theme-transition *::before,
 html { -webkit-font-smoothing: antialiased; }
 
 /* Entrada del hero: el contenido siempre es visible (opacidad 1); solo sube unos píxeles. Sin JS, sin animación en móvil. */
-@keyframes enter-up { from { transform: translateY(0.4em); } }
-.split-word, .enter { animation: enter-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: var(--d, 0s); }
-@media (max-width: 767px), (prefers-reduced-motion: reduce) { .split-word, .enter, .fx-hero { animation: none; } }
+/*
+ * Entrada de la portada en escritorio: una sola coreografía corta (≈ 1,1 s), solo con transform y opacity (compositor). El texto está en el
+ * HTML y sube unos píxeles; las piezas del logo llegan desde fuera con CSS (sin escala: así su tamaño de pintado ya es el final y no cuenta como un candidato LCP posterior), sin esperar a JavaScript. Curva ease-out-quart: arranca al
+ * instante y asienta rápido (la anterior, ease-out-expo con 1,6 s, dejaba una cola larga que se sentía lenta).
+ */
+@keyframes enter-up { from { transform: translate3d(0, 0.4em, 0); } }
+.split-word, .enter { animation: enter-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: var(--d, 0s); }
+@keyframes logo-in {
+  from { opacity: 0; transform: translate3d(var(--ex, 0), var(--ey, 0), 0) rotate(var(--er, 0deg)); }
+}
+.logo-in { animation: logo-in 0.95s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: var(--d, 0s); }
+@keyframes shard-in { from { opacity: 0; transform: scale(0.6); } }
+.shard-in { animation: shard-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: var(--d, 0s); }
+/* Símbolo del hero: sombra y reflejo de cada pieza; LogoSymbol cambia las variables con el cursor (ver components/fx/LogoSymbol.tsx). */
+.logo-shadow { filter: drop-shadow(var(--sx, 0px) var(--sy, 12px) var(--sb, 10px) rgba(0, 0, 0, 0.28)); }
+.logo-sheen { background: radial-gradient(circle at var(--lx, 50%) var(--ly, 45%), rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.25) 18%, transparent 42%); }
+@media (max-width: 767px), (prefers-reduced-motion: reduce) { .split-word, .enter, .fx-hero, .logo-in, .shard-in { animation: none; } }
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 .lenis.lenis-stopped { overflow: hidden; }
@@ -146,6 +160,7 @@ body {
 @media (max-width: 767px), (pointer: coarse), (prefers-reduced-motion: reduce) {
   .only-mobile { display: block; }
   .only-desktop { display: none; }
+  .logo-shadow { filter: none; }
 }
 
 /* Fondo estático de las secciones en móvil (sustituye al canvas): las mismas manchas de color de la aurora, sin JavaScript. */

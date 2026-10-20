@@ -4,8 +4,8 @@ import { ArrowDown, ArrowRight, CalendarCheck, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useRef } from 'react';
 import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
-import { LogoParallax, LogoShards } from '@/components/fx/LogoLazy';
-import { LogoStatic } from '@/components/fx/LogoPieces';
+import { LogoShards } from '@/components/fx/LogoLazy';
+import { LogoSymbol } from '@/components/fx/LogoSymbol';
 import { Magnetic, SplitWords } from '@/components/fx/effects';
 import { ContentImage } from '@/components/ui/ContentImage';
 import { useDesktopFx } from '@/lib/perf';
@@ -71,7 +71,7 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
       {hero.imageUrl && (
         <ContentImage src={hero.imageUrl} alt="" priority sizes="100vw" className="object-cover opacity-15 dark:opacity-25" />
       )}
-      <InteractiveBackground hero colors={[brand.primaryColor, brand.accentColor, '#1f2a30', '#5b6b75']} />
+      <InteractiveBackground hero startDelay={1300} colors={[brand.primaryColor, brand.accentColor, '#1f2a30', '#5b6b75']} />
       {/* LogoShards no se monta en móvil (ver su comentario) */}
       <LogoShards scrollTarget={ref} />
     </>
@@ -79,19 +79,19 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
 
   const content = (
     <>
-      <p style={rise(12, 0.8, 0)}
+      <p style={rise(10, 0.55, 0)}
         className="fx-rise fx-hero eyebrow mb-6 inline-flex items-center gap-2 rounded-full border border-ink-900/15 bg-ink-900/5 px-4 py-2 text-ink-900/80 backdrop-blur max-md:backdrop-blur-none">
         <span className="h-1.5 w-1.5 animate-pulse max-md:[animation-iteration-count:3] rounded-full bg-brand dark:bg-accent" /> {hero.eyebrow}
       </p>
       <h1 className="text-5xl leading-[0.95] font-bold tracking-tight sm:text-6xl xl:text-7xl">
         <SplitWords text={main} />
-        <SplitWords text={accent} delay={0.35} className="font-display font-normal text-brand-ink dark:text-accent" />
+        <SplitWords text={accent} delay={0.18} className="font-display font-normal text-brand-ink dark:text-accent" />
       </h1>
-      <p style={rise(20, 0.9, 0.6)}
+      <p style={rise(14, 0.6, 0.12)}
         className="fx-rise fx-hero mt-8 max-w-2xl text-lg text-ink-900/70 sm:text-xl">
         {hero.subtitle}
       </p>
-      <div style={rise(20, 0.9, 0.8)}
+      <div style={rise(14, 0.6, 0.2)}
         className="fx-rise fx-hero mt-10 flex flex-wrap items-center gap-3">
         <Magnetic>
           <Link href="/solicitar" className="btn-primary px-7 py-4 text-base dark:bg-accent dark:text-ink-950 dark:shadow-accent/20">{hero.ctaPrimary} <ArrowRight className="h-4 w-4" /></Link>
@@ -102,7 +102,7 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
           </Link>
         </Magnetic>
       </div>
-      <ul style={rise(0, 1, 1.1)}
+      <ul style={rise(0, 0.6, 0.3)}
         className="fx-rise fx-hero mt-12 flex flex-wrap gap-x-8 gap-y-3 text-sm text-ink-900/70">
         {hero.highlights.map((h) => (
           <li key={h} className="flex items-center gap-2"><Check className="h-4 w-4 text-brand-ink dark:text-accent" /> {h}</li>
@@ -128,9 +128,8 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
       <div className="container-x relative z-10 grid items-center gap-6 pt-28 pb-20 lg:grid-cols-12">
       <ScrollOut target={ref} enabled={fx} className="lg:col-span-7">{content}</ScrollOut>
       <div className="order-first mx-auto w-44 sm:w-56 lg:order-none lg:col-span-5 lg:w-full lg:max-w-md">
-        {/* Escritorio: símbolo animado (parallax, brillo, sombra). Móvil: símbolo estático sin filtros ni mezclas. */}
-        <LogoParallax scrollTarget={ref} />
-        <div className="only-mobile"><LogoStatic /></div>
+        {/* Símbolo: entrada con CSS desde el primer pintado; en escritorio, al terminar, se engancha el parallax (ver LogoSymbol) */}
+        <LogoSymbol scrollTarget={ref} />
       </div>
       </div>
 
