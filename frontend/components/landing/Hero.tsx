@@ -80,8 +80,8 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
   const content = (
     <>
       <p style={rise(12, 0.8, 0)}
-        className="fx-rise fx-hero eyebrow mb-6 inline-flex items-center gap-2 rounded-full border border-ink-900/15 bg-ink-900/5 px-4 py-2 text-ink-900/80 backdrop-blur">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand dark:bg-accent" /> {hero.eyebrow}
+        className="fx-rise fx-hero eyebrow mb-6 inline-flex items-center gap-2 rounded-full border border-ink-900/15 bg-ink-900/5 px-4 py-2 text-ink-900/80 backdrop-blur max-md:backdrop-blur-none">
+        <span className="h-1.5 w-1.5 animate-pulse max-md:[animation-iteration-count:3] rounded-full bg-brand dark:bg-accent" /> {hero.eyebrow}
       </p>
       <h1 className="text-5xl leading-[0.95] font-bold tracking-tight sm:text-6xl xl:text-7xl">
         <SplitWords text={main} />
@@ -97,7 +97,7 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
           <Link href="/solicitar" className="btn-primary px-7 py-4 text-base dark:bg-accent dark:text-ink-950 dark:shadow-accent/20">{hero.ctaPrimary} <ArrowRight className="h-4 w-4" /></Link>
         </Magnetic>
         <Magnetic>
-          <Link href="/solicitar?tipo=levantamiento" className="btn border border-ink-900/20 px-7 py-4 text-base backdrop-blur hover:bg-ink-900/5">
+          <Link href="/solicitar?tipo=levantamiento" className="btn border border-ink-900/20 px-7 py-4 text-base backdrop-blur max-md:backdrop-blur-none hover:bg-ink-900/5">
             <CalendarCheck className="h-4 w-4" /> {hero.ctaSecondary}
           </Link>
         </Magnetic>
@@ -115,7 +115,7 @@ export function Hero({ hero, brand }: { hero: Settings['hero']; brand: Settings[
     <>
       Descubre
       <span className="grid h-10 w-6 place-items-start justify-center rounded-full border border-ink-900/25 p-1">
-        <ArrowDown className="h-3 w-3 animate-bounce" />
+        <ArrowDown className="h-3 w-3 animate-bounce max-md:[animation-iteration-count:3]" />
       </span>
     </>
   );

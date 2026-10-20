@@ -52,7 +52,7 @@ export function Process({ process }: { process: Settings['process'] }) {
                     </div>
                     <ol className="space-y-4">
                       {phase.steps.map((s, j) => (
-                        <li key={j} className="flex gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-md">
+                        <li key={j} className="flex gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-md max-md:bg-white/[0.07] max-md:backdrop-blur-none">
                           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent text-sm font-bold text-ink-950">{j + 1}</span>
                           <p className="text-white/80">{s}</p>
                         </li>

@@ -135,6 +135,11 @@ body {
   mix-blend-mode: overlay;
 }
 
+/* Móvil: el grano (mezcla `overlay` sobre todo el hero) es de lo más caro de pintar en una GPU pequeña y casi no se nota en una pantalla chica. */
+@media (max-width: 767px) {
+  .grain::after { display: none; }
+}
+
 /* Hero: el HTML trae la versión ligera (.only-mobile) y la completa (.only-desktop); el CSS muestra una según el equipo.
    La condición es la misma que `LIGHT_HERO_QUERY` de lib/perf.ts. */
 .only-mobile { display: none; }

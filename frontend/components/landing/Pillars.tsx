@@ -39,7 +39,7 @@ function PillarScene({ pillar, index }: { pillar: Pillar; index: number }) {
         <div className="lg:col-span-5">
           <div className="lg:sticky lg:top-28">
             <PillarCard code={pillar.code} color={color}>
-              <span className="relative grid h-14 w-14 place-items-center rounded-2xl bg-white/15 backdrop-blur">
+              <span className="relative grid h-14 w-14 place-items-center rounded-2xl bg-white/15 backdrop-blur max-md:backdrop-blur-none">
                 <ServiceIcon name={pillar.icon} className="h-7 w-7" />
               </span>
               <p className="relative mt-auto pt-10 eyebrow text-white/70">Pilar {pillar.code} · {String(index + 1).padStart(2, '0')}</p>

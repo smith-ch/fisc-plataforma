@@ -38,7 +38,7 @@ export function Header({ brand }: { brand: Settings['brand'] }) {
     <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${bare ? 'py-5' : 'py-3'}`}>
       <div className="container-x">
         <div className={`flex items-center justify-between rounded-full px-4 py-2 transition-all duration-500 sm:px-5 ${
-          bare ? 'border border-transparent bg-transparent' : 'border border-ink-900/10 bg-paper/75 shadow-lg shadow-black/5 backdrop-blur-xl'}`}>
+          bare ? 'border border-transparent bg-transparent' : 'border border-ink-900/10 bg-paper/75 shadow-lg shadow-black/5 backdrop-blur-xl max-md:bg-paper/95 max-md:backdrop-blur-none'}`}>
           <Logo name={brand.name} tagline={brand.tagline} logoUrl={brand.logoUrl} logoLightUrl={brand.logoLightUrl} />
           <nav className="hidden items-center gap-1 lg:flex">
             {NAV.map((n) => (
