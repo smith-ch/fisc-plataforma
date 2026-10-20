@@ -135,6 +135,52 @@ body {
   .grain::after { display: none; }
 }
 
+/* Hero: el HTML trae la versión ligera (.only-mobile) y la completa (.only-desktop); el CSS muestra una según el equipo.
+   La condición es la misma que `LIGHT_HERO_QUERY` de lib/perf.ts. */
+.only-mobile { display: none; }
+@media (max-width: 767px), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .only-mobile { display: block; }
+  .only-desktop { display: none; }
+}
+
+/* Fondo estático de las secciones en móvil (sustituye al canvas): las mismas manchas de color de la aurora, sin JavaScript. */
+.aurora-static {
+  --a: 24%;
+  background:
+    radial-gradient(60% 55% at 22% 28%, color-mix(in srgb, var(--c0) var(--a), transparent), transparent 70%),
+    radial-gradient(55% 50% at 78% 38%, color-mix(in srgb, var(--c1) var(--a), transparent), transparent 70%),
+    radial-gradient(60% 55% at 45% 85%, color-mix(in srgb, var(--c2) var(--a), transparent), transparent 70%);
+}
+.dark .aurora-static { --a: 42%; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* Animaciones de entrada con CSS (reemplazan a `motion` en lo que corre también en móvil). */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, var(--ry, 32px), 0);
+  transition: opacity .8s cubic-bezier(.16, 1, .3, 1) var(--rd, 0s), transform .8s cubic-bezier(.16, 1, .3, 1) var(--rd, 0s);
+}
+.reveal.is-in { opacity: 1; transform: none; }
+
+@keyframes rise {
+  from { opacity: var(--o, 0); transform: translate3d(0, var(--y, 12px), 0); }
+  to { opacity: 1; transform: none; }
+}
+/* Variables: --y (desplazamiento inicial), --o (opacidad inicial), --dur, --d (retraso) */
+.fx-rise { animation: rise var(--dur, .8s) cubic-bezier(.16, 1, .3, 1) var(--d, 0s) both; }
+
+@keyframes theme-icon {
+  from { opacity: 0; transform: translateY(14px) rotate(-90deg); }
+  to { opacity: 1; transform: none; }
+}
+.theme-icon-in { animation: theme-icon .25s ease-out; }
+
+.spotlight, .magnetic { transition: transform .25s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .fx-rise, .theme-icon-in { animation: none; }
 }

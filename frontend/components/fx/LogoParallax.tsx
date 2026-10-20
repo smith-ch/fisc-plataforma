@@ -1,29 +1,9 @@
 'use client';
 
 import { motion, useAnimationFrame, useMotionTemplate, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from 'motion/react';
-import Image from 'next/image';
-import { preload } from 'react-dom';
 import { useEffect, useRef } from 'react';
-
-type Variant = 'white' | 'black' | 'auto';
-
-/**
- * Imagen de una pieza (WebP de 422×511 servido por next/image); con `auto` se
- * muestra la negra en claro y la blanca en oscuro. `sizes` es el ancho real con
- * que se pinta, para que el optimizador sirva el tamaño justo.
- */
-function PieceImg({ id, variant, sizes, className = '', style }: { id: string; variant: Variant; sizes: string; className?: string; style?: React.CSSProperties }) {
-  const img = (v: 'black' | 'white', cls: string) => (
-    <Image src={`/brand/piece-${id}-${v}.webp`} alt="" width={422} height={511} sizes={sizes} draggable={false} className={cls} style={style} />
-  );
-  if (variant !== 'auto') return img(variant, className);
-  return (
-    <>
-      {img('black', `${className} dark:hidden`)}
-      {img('white', `${className} hidden dark:block`)}
-    </>
-  );
-}
+import { PIECES, PieceImg, type Variant } from './LogoPieces';
+import { onPointerMove } from '@/lib/pointer';
 
 /**
  * Cursor normalizado (-1..1). Si no hay puntero (móvil) o lleva un rato quieto,
@@ -35,16 +15,12 @@ function usePointer() {
   const lastMove = useRef(-Infinity);
   const reduced = useReducedMotion();
 
-  useEffect(() => {
-    const onMove = (e: PointerEvent) => {
-      if (e.pointerType === 'touch') return;
-      lastMove.current = performance.now();
-      mx.set((e.clientX / window.innerWidth) * 2 - 1);
-      my.set((e.clientY / window.innerHeight) * 2 - 1);
-    };
-    window.addEventListener('pointermove', onMove, { passive: true });
-    return () => window.removeEventListener('pointermove', onMove);
-  }, [mx, my]);
+  // Listener compartido (lib/pointer.ts): un solo `pointermove` en window para toda la página, y solo con ratón.
+  useEffect(() => onPointerMove((e) => {
+    lastMove.current = performance.now();
+    mx.set((e.clientX / window.innerWidth) * 2 - 1);
+    my.set((e.clientY / window.innerHeight) * 2 - 1);
+  }), [mx, my]);
 
   useAnimationFrame((now) => {
     if (reduced || performance.now() - lastMove.current < 3500) return;
@@ -55,28 +31,12 @@ function usePointer() {
   return { mx, my };
 }
 
-/**
- * Símbolo F.I.S.C. armado con sus 4 piezas (recortadas del logo oficial).
- * - Al cargar, las piezas llegan desde afuera y se ensamblan.
- * - Con el cursor, cada pieza se desplaza según su profundidad (parallax 3D)
- *   y el conjunto se inclina.
- * - Al hacer scroll las piezas se separan en una "vista explotada".
- */
-const PIECES = [
-  { id: 'f', depth: 18, explode: { x: -70, y: -60, r: -8 }, enter: { x: -260, y: -120 } },
-  { id: 's-top', depth: 38, explode: { x: 60, y: -30, r: 7 }, enter: { x: 240, y: -160 } },
-  { id: 's-mid', depth: 60, explode: { x: -30, y: 40, r: -6 }, enter: { x: -80, y: 220 } },
-  { id: 's-bottom', depth: 28, explode: { x: 40, y: 110, r: 6 }, enter: { x: 200, y: 260 } },
-] as const;
-
 export function LogoParallax({ variant = 'auto', className = '', scrollTarget }: {
   variant?: Variant;
   className?: string;
   /** Sección que controla la "explosión" con el scroll (por defecto el propio componente). */
   scrollTarget?: React.RefObject<HTMLElement | null>;
 }) {
-  // Las máscaras del brillo se descubren por CSS (tarde); se precargan para que la pieza no espere por ellas
-  for (const p of PIECES) preload(`/brand/piece-${p.id}-white.webp`, { as: 'image' });
   const ref = useRef<HTMLDivElement>(null);
   const { mx, my } = usePointer();
   const sx = useSpring(mx, { stiffness: 60, damping: 18 });
@@ -160,7 +120,7 @@ const SHARDS = [
   { id: 's-bottom', left: 2, top: 46, size: 60, depth: 0.1, rot: 80, blur: 5, o: 0.1 },
 ];
 
-export function LogoShards({ variant = 'auto', scrollTarget }: { variant?: Variant; scrollTarget?: React.RefObject<HTMLElement | null> }) {
+export function ShardsField({ variant, scrollTarget }: { variant: Variant; scrollTarget?: React.RefObject<HTMLElement | null> }) {
   const { mx, my } = usePointer();
   const sx = useSpring(mx, { stiffness: 40, damping: 20 });
   const sy = useSpring(my, { stiffness: 40, damping: 20 });
