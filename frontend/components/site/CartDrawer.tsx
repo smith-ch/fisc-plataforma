@@ -1,8 +1,8 @@
 'use client';
 
-import { AnimatePresence, motion } from 'motion/react';
 import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useCart } from '@/components/providers';
 import { ServiceIcon, WhatsAppIcon } from '@/components/Icon';
 import { waLink } from '@/lib/constants';
@@ -11,14 +11,18 @@ import { mensajeSolicitud } from '@/lib/solicitud';
 /** Carrito lateral. `phone` es el WhatsApp del negocio (solo dígitos con código de país). */
 export function CartDrawer({ phone }: { phone: string }) {
   const cart = useCart();
+  // Panel siempre montado (una vez descargado): abrir/cerrar es una transición CSS. `shown` va un par de fotogramas detrás de `cart.open`
+  // para que la primera apertura también anime (el panel nace fuera de pantalla y luego entra).
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    let id2 = 0;
+    const id1 = requestAnimationFrame(() => { id2 = requestAnimationFrame(() => setShown(cart.open)); });
+    return () => { cancelAnimationFrame(id1); cancelAnimationFrame(id2); };
+  }, [cart.open]);
   return (
-    <AnimatePresence>
-      {cart.open && (
-        <>
-          <motion.div className="fixed inset-0 z-[70] bg-ink-950/40" onClick={() => cart.setOpen(false)}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
-          <motion.aside className="fixed top-0 right-0 bottom-0 z-[71] flex w-full max-w-md flex-col bg-sand-50 shadow-2xl"
-            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+    <div className={`fixed inset-0 z-[70] transition-[visibility] duration-300 ${shown ? 'visible' : 'invisible'}`}>
+          <div className={`absolute inset-0 bg-ink-950/40 transition-opacity duration-300 ${shown ? 'opacity-100' : 'opacity-0'}`} onClick={() => cart.setOpen(false)} />
+          <aside className={`absolute top-0 right-0 bottom-0 flex w-full max-w-md flex-col bg-sand-50 shadow-2xl transition-transform duration-300 ease-out ${shown ? 'translate-x-0' : 'translate-x-full'}`}
             data-lenis-prevent role="dialog" aria-label="Tu solicitud">
             <div className="flex items-center justify-between border-b border-ink-900/10 p-5">
               <h3 className="flex items-center gap-2 text-lg font-bold"><ShoppingBag className="h-5 w-5 text-brand-ink" /> Tu solicitud</h3>
@@ -58,9 +62,7 @@ export function CartDrawer({ phone }: { phone: string }) {
                 </Link>
               </div>
             )}
-          </motion.aside>
-        </>
-      )}
-    </AnimatePresence>
+          </aside>
+    </div>
   );
 }
