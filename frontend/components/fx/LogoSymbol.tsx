@@ -26,7 +26,7 @@ export function LogoSymbol({ variant = 'auto', scrollTarget }: { variant?: Varia
   const active = fx && ready;
   useLogoFx(root, scrollTarget, active);
   // Las máscaras del brillo se descubren por CSS (tarde): se precargan solo donde hay brillo (escritorio con ratón)
-  for (const p of PIECES) preload(`/brand/piece-${p.id}-white.webp`, { as: 'image', media: '(min-width: 768px) and (pointer: fine)' });
+  for (const p of PIECES) preload(`/brand/piece-${p.id}-white.webp`, { as: 'image', crossOrigin: 'anonymous', media: '(min-width: 768px) and (pointer: fine) and (prefers-reduced-motion: no-preference)' });
 
   return (
     <div ref={root} className="relative aspect-[422/511] w-full [perspective:1200px]">
