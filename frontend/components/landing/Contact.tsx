@@ -50,7 +50,7 @@ export function Contact({ contact, brand }: { contact: Settings['contact']; bran
           </ul>
         </Reveal>
         <Reveal delay={0.15}>
-          <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-7 backdrop-blur-xl sm:p-9">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-7 backdrop-blur-xl max-md:bg-white/10 max-md:backdrop-blur-none sm:p-9">
             {sent ? (
               <div className="py-12 text-center">
                 <CheckCircle2 className="mx-auto h-14 w-14 text-accent" />
