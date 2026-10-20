@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "format": "prettier --check \"app/**/*.{ts,tsx}\" \"components/**/*.{ts,tsx}\" \"lib/**/*.ts\"",
     "format:write": "prettier --write \"app/**/*.{ts,tsx}\" \"components/**/*.{ts,tsx}\" \"lib/**/*.ts\"",
+    "test": "node --test \"lib/**/*.test.mjs\"",
     "analyze": "node -e \"process.env.ANALYZE='true';process.exit(require('child_process').spawnSync('npx',['next','build'],{stdio:'inherit',shell:true,env:process.env}).status)\""
   },
   "dependencies": {

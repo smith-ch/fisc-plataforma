@@ -53,6 +53,5 @@ export function date(v: string | null | undefined, withTime = false) {
     : { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-export function waLink(phone: string, text: string) {
-  return `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`;
-}
+/** @deprecated usa `whatsappLink` de `lib/contact.ts`. Se conserva solo para el código apagado de `legacy/`. */
+export { whatsappLink as waLink } from './contact';

@@ -5,7 +5,8 @@ import { useMemo, useState } from 'react';
 import { ServiceIcon, WhatsAppIcon } from '@/components/Icon';
 import { useCart } from '@/components/providers';
 import { Alert } from '@/components/ui/bits';
-import { PROPERTY_TYPES, URGENCY, waLink } from '@/lib/constants';
+import { PROPERTY_TYPES, URGENCY } from '@/lib/constants';
+import { whatsappLink } from '@/lib/contact';
 import { mensajeSolicitud } from '@/lib/solicitud';
 import type { Pillar } from '@/lib/types';
 
@@ -52,7 +53,7 @@ export function SolicitudForm({ catalog, phone }: { catalog: Pillar[]; phone: st
     const msg = validar();
     setError(msg);
     if (msg || !phone) return;
-    window.open(waLink(phone, mensaje), '_blank', 'noopener,noreferrer');
+    window.open(whatsappLink(phone, mensaje), '_blank', 'noopener,noreferrer');
   }
 
   async function copiar() {
