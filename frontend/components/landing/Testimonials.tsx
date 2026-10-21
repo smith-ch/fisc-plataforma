@@ -1,5 +1,6 @@
 import { Quote, Star } from 'lucide-react';
 import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
+import { PauseOffscreen } from '@/components/fx/PauseOffscreen';
 import { Reveal } from '@/components/fx/effects';
 import { ContentImage } from '@/components/ui/ContentImage';
 import type { Testimonial } from '@/lib/types';
@@ -15,7 +16,7 @@ export function Testimonials({ items }: { items: Testimonial[] }) {
           <h2 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">Lo que dicen nuestros clientes</h2>
         </Reveal>
       </div>
-      <div className="relative z-10 mt-12 flex w-max animate-marquee gap-5 px-4 [animation-duration:60s] hover:[animation-play-state:paused]">
+      <PauseOffscreen className="relative z-10 mt-12 flex w-max animate-marquee gap-5 px-4 [animation-duration:60s] hover:[animation-play-state:paused] data-[offscreen=true]:[animation-play-state:paused]">
         {[...items, ...items].map((t, i) => (
           <figure key={i} className="w-[340px] shrink-0 rounded-3xl border border-ink-900/10 bg-paper p-7 sm:w-[400px]">
             <Quote className="h-8 w-8 text-brand-ink/30" />
@@ -34,7 +35,7 @@ export function Testimonials({ items }: { items: Testimonial[] }) {
             </figcaption>
           </figure>
         ))}
-      </div>
+      </PauseOffscreen>
     </section>
   );
 }
