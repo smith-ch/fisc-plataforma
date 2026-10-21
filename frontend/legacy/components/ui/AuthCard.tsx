@@ -1,5 +1,5 @@
 import { InteractiveBackground } from '@/components/fx/InteractiveBackground';
-import { LogoParallax } from '@/components/fx/LogoParallax';
+import { LogoSymbol } from '@/components/fx/LogoSymbol';
 
 /** Pantalla dividida: formulario + panel oscuro con el símbolo en parallax. */
 export function AuthShell({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
@@ -14,7 +14,7 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
       </div>
       <div className="grain relative hidden items-center justify-center overflow-hidden bg-ink-950 lg:flex">
         <InteractiveBackground />
-        <div className="relative w-72"><LogoParallax /></div>
+        <div className="relative w-72"><LogoSymbol variant="white" /></div>
       </div>
     </div>
   );
