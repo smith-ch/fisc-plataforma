@@ -62,7 +62,7 @@ export function SplitWords({ text, className = '', delay = 0 }: { text: string; 
   return (
     <span className={className}>
       {text.split(' ').map((word, i) => (
-        <span key={i} className="split-word inline-block" style={{ '--d': `${delay + i * 0.06}s` } as React.CSSProperties}>
+        <span key={i} className="split-word inline-block" style={{ '--d': `${delay + i * 0.035}s` } as React.CSSProperties}>
           {word}&nbsp;
         </span>
       ))}

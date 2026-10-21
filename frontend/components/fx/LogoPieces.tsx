@@ -7,9 +7,9 @@ export type Variant = 'white' | 'black' | 'auto';
  * muestra la negra en claro y la blanca en oscuro. `sizes` es el ancho real con
  * que se pinta, para que el optimizador sirva el tamaño justo.
  */
-export function PieceImg({ id, variant, sizes, className = '', style }: { id: string; variant: Variant; sizes: string; className?: string; style?: React.CSSProperties }) {
+export function PieceImg({ id, variant, sizes, className = '', style, eager = false }: { id: string; variant: Variant; sizes: string; className?: string; style?: React.CSSProperties; eager?: boolean }) {
   const img = (v: 'black' | 'white', cls: string) => (
-    <Image src={`/brand/piece-${id}-${v}.webp`} alt="" width={422} height={511} sizes={sizes} draggable={false} className={cls} style={style} />
+    <Image src={`/brand/piece-${id}-${v}.webp`} alt="" width={422} height={511} sizes={sizes} draggable={false} className={cls} style={style} loading={eager ? 'eager' : undefined} />
   );
   if (variant !== 'auto') return img(variant, className);
   return (
@@ -35,22 +35,4 @@ export const PIECES = [
   { id: 's-bottom', depth: 28, explode: { x: 40, y: 110, r: 6 }, enter: { x: 200, y: 260 } },
 ] as const;
 
-
-/**
- * Versión ligera del símbolo para móvil y "reducir movimiento": las 4 piezas ensambladas, sin movimiento, sin `filter`
- * (ni blur ni drop-shadow), sin `mix-blend-mode` y sin hooks de scroll ni de puntero. El halo es un degradado radial, no un desenfoque.
- */
-export function LogoStatic({ variant = 'auto', className = '' }: { variant?: Variant; className?: string }) {
-  return (
-    <div className={`relative aspect-[422/511] w-full ${className}`}>
-      <div aria-hidden className="absolute inset-[4%] rounded-full"
-        style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--color-accent) 35%, transparent) 0%, transparent 68%)' }} />
-      {PIECES.map((p) => (
-        <div key={p.id} className="absolute inset-0">
-          <PieceImg id={p.id} variant={variant} sizes="(min-width: 640px) 224px, 176px" className="h-full w-full" />
-        </div>
-      ))}
-    </div>
-  );
-}
 
