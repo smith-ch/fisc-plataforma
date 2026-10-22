@@ -85,7 +85,9 @@ html { -webkit-font-smoothing: antialiased; }
 @keyframes shard-in { from { opacity: 0; transform: scale(0.6); } }
 .shard-in { animation: shard-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: var(--d, 0s); }
 /* Símbolo del hero: sombra y reflejo de cada pieza; LogoSymbol cambia las variables con el cursor (ver components/fx/LogoSymbol.tsx). */
-.logo-shadow { filter: drop-shadow(var(--sx, 0px) var(--sy, 12px) var(--sb, 10px) rgba(0, 0, 0, 0.28)); }
+.logo-shadow { filter: drop-shadow(var(--sx, 0px) var(--sy, 14px) 16px rgba(0, 0, 0, 0.3)); }
+@keyframes logo-shadow-in { from { filter: drop-shadow(0 14px 16px rgba(0, 0, 0, 0)); } }
+.logo-shadow-in { animation: logo-shadow-in 0.5s ease-out; }
 .logo-sheen { background: radial-gradient(circle at var(--lx, 50%) var(--ly, 45%), rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.25) 18%, transparent 42%); }
 @media (max-width: 767px), (prefers-reduced-motion: reduce) { .split-word, .enter, .fx-hero, .logo-in, .shard-in { animation: none; } }
 html.lenis, html.lenis body { height: auto; }
