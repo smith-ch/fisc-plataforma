@@ -64,9 +64,31 @@ Al cerrar cada tarea se vuelve a medir con el mismo procedimiento y se agrega un
 | Tarea | Fecha | Rendimiento | LCP | TBT | JS `/` | PR |
 |---|---|---|---|---|---|---|
 | Base | 2026-10-19 | 76 | 3,7 s | 479 ms | 205 kB | — |
-| #41 | | | | | | |
-| #38 | | | | | | |
+| #41 | 2026-10-19 | ruidoso (ver PR #48) | | | | #48 |
+| #38 | 2026-10-19 | 71 → 81 (mediana de 5) | 3,9 → 3,4 s | 640 → 390 ms | | #50 |
 | #39 | | | | | | |
 | #40 | | | | | | |
-| #42 | | | | | | |
+| #42 | 2026-10-19 | 94 | | | 200 → 149 kB | #53, #54 |
 | #43 | | | | | | #46 (medido con fotos de prueba: ver el PR) |
+
+## Medición final de la serie (2026-10-21, `main` en 4377045, con #38–#43, #54 y #57 ya integrados)
+
+Mediana de 3 corridas, Lighthouse 12 móvil, build de producción (más el PR que pausa las marquesinas fuera de pantalla, sin efecto en esta métrica).
+
+| Página | Rendimiento | LCP | TBT | CLS | JS transferido | Imágenes | Peso total | Hilo principal |
+|---|---|---|---|---|---|---|---|---|
+| `/` | 94 | 2,9 s | 62 ms | 0,002 | 153 kB | 30 kB | 299 kB | 2,0 s |
+| `/servicios` | 95 | 2,7 s | 65 ms | 0,001 | 160 kB | 2 kB | 291 kB | 1,2 s |
+| `/solicitar` | 96 | 2,7 s | 47 ms | 0,000 | 153 kB | 4 kB | 266 kB | 1,2 s |
+
+Contra las metas de `/`:
+
+| Métrica | Meta | Base | Final | Estado |
+|---|---|---|---|---|
+| Rendimiento | ≥ 80 | 76 | 94 | cumplida |
+| LCP | < 2,5 s | 3,7 s | 2,9 s | **no cumplida** (−0,4 s; lo limita la capa decorativa del brillo del logo) |
+| TBT | < 200 ms | 479 ms | 62 ms | cumplida |
+| CLS | < 0,1 | 0,001 | 0,002 | cumplida |
+| JS transferido | ≤ 150 kB | 205 kB | 153 kB | casi (3 kB por encima) |
+
+Sigue sin medirse INP ni un Android real (ver arriba).
