@@ -1,5 +1,6 @@
 node_modules
 marketing/out/
+marketing/videos/
 
 # env
 .env*

@@ -2,10 +2,10 @@
 
 30 videos con música y efectos de sonido sintetizados, listos para publicar (TikTok / Instagram / Facebook).
 
-> Los videos pesan ~127 MB y se van a mover fuera del repositorio. Estado, opciones y pasos: [`docs/videos-de-marketing.md`](../docs/videos-de-marketing.md) (#17).
+> Los videos ya no están en Git: viven en una carpeta local (`FISC_VIDEOS_DIR`, por defecto `fisc-videos` junto al repo). `node scripts/videos.mjs ruta` dice cuál es y `node scripts/videos.mjs mover` los mueve. Detalles y alternativas: [`docs/videos-de-marketing.md`](../docs/videos-de-marketing.md) (#17).
 
-- `videos/marca/` — 15 videos de **marca** (identidad, promesa, los 3 pilares). Mezcla de vertical, horizontal y cuadrado.
-- `videos/comercial/` — 15 videos **comerciales** para captar clientes: gancho + servicio + llamada a la acción.
+- `videos/marca/` (en la carpeta externa) — 15 videos de **marca** (identidad, promesa, los 3 pilares). Mezcla de vertical, horizontal y cuadrado.
+- `videos/comercial/` (en la carpeta externa) — 15 videos **comerciales** para captar clientes: gancho + servicio + llamada a la acción.
 - Cada carpeta trae `video.mp4`, `poster.jpg` y `share-copy.txt` (texto sugerido para publicar). `PLAN.md` resume el ángulo de cada video.
 
 ## Regenerar o editar
