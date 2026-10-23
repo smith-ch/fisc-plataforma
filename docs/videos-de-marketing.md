@@ -13,6 +13,20 @@
 
 Los videos no los usa el sitio: ninguna ruta de `frontend/` apunta a `marketing/videos/`.
 
+## Ruta local (sin subirlos a ningún sitio)
+
+Opción más simple: sacar los videos del repositorio y guardarlos en una carpeta del equipo. Los videos dejan de estar en el árbol de Git (`marketing/videos/` queda ignorada) pero **cada persona necesita su copia**: no se comparten por Git. Sirve para quien genera y publica los videos; para compartirlos con otros sigue haciendo falta un release, Drive u objetos.
+
+```bash
+node scripts/videos.mjs ruta                 # carpeta que se usa
+node scripts/videos.mjs mover                # simulacro: qué se movería
+node scripts/videos.mjs mover --aplicar      # copia, verifica tamaño de cada archivo y borra marketing/videos/
+```
+
+La carpeta es, en este orden: `--destino=RUTA`, la variable `FISC_VIDEOS_DIR`, o `fisc-videos` junto a la carpeta del repositorio (hoy `C:Userssgarciaiscisc-videos`). El script nunca borra el origen si la copia no coincide.
+
+Esto **no reduce el historial**: los 127 MB siguen en los commits viejos y un clon nuevo sigue tardando igual hasta que se limpie con `git filter-repo` (paso 5 de abajo). Sí evita que los videos nuevos o editados engorden más el repositorio y deja el árbol de trabajo liviano.
+
 ## Opciones para el almacenamiento
 
 | Opción | Pros | Contras |
