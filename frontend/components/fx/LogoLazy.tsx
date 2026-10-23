@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { useEffect, useRef } from 'react';
 import { useAfterEntrance, useDesktopFx } from '@/lib/perf';
 import type { Variant } from './LogoPieces';
 
@@ -18,5 +19,10 @@ type Target = React.RefObject<HTMLElement | null>;
 export function LogoShards({ variant = 'auto', scrollTarget }: { variant?: Variant; scrollTarget?: Target }) {
   const fx = useDesktopFx();
   const after = useAfterEntrance(900); // entran justo después del símbolo, con un fundido corto
-  return <div className="only-desktop absolute inset-0">{fx && after && <ShardsFieldFx variant={variant} scrollTarget={scrollTarget} />}</div>;
+  // El hero es un componente de servidor y no puede pasar una referencia: sin `scrollTarget`, se usa la sección marcada con `data-hero` que lo contiene
+  const holder = useRef<HTMLDivElement>(null);
+  const hero = useRef<HTMLElement | null>(null);
+  useEffect(() => { hero.current = holder.current?.closest<HTMLElement>('[data-hero]') ?? null; }, []);
+  const target = scrollTarget ?? (hero.current ? hero : undefined);
+  return <div ref={holder} className="only-desktop absolute inset-0">{fx && after && <ShardsFieldFx variant={variant} scrollTarget={target} />}</div>;
 }

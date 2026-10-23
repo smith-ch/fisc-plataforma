@@ -53,23 +53,6 @@ export function Reveal({ children, delay = 0, y = 32, className = '', above = fa
   );
 }
 
-/**
- * Titular que sube palabra por palabra. El texto está en el HTML del servidor y se ve desde el primer render:
- * la animación (CSS, `.split-word`) solo lo desplaza unos píxeles y nunca lo oculta, ni siquiera sin JavaScript.
- * En móvil y con "reducir movimiento" no se anima (ver globals.css).
- */
-export function SplitWords({ text, className = '', delay = 0 }: { text: string; className?: string; delay?: number }) {
-  return (
-    <span className={className}>
-      {text.split(' ').map((word, i) => (
-        <span key={i} className="split-word inline-block" style={{ '--d': `${delay + i * 0.035}s` } as React.CSSProperties}>
-          {word}&nbsp;
-        </span>
-      ))}
-    </span>
-  );
-}
-
 /** Tarjeta con foco de luz que sigue al cursor y leve inclinación 3D. */
 export function SpotlightCard({ children, className = '', tilt = true }: { children: React.ReactNode; className?: string; tilt?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
