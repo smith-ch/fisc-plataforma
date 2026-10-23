@@ -23,7 +23,7 @@ node scripts/videos.mjs mover                # simulacro: qué se movería
 node scripts/videos.mjs mover --aplicar      # copia, verifica tamaño de cada archivo y borra marketing/videos/
 ```
 
-La carpeta es, en este orden: `--destino=RUTA`, la variable `FISC_VIDEOS_DIR`, o `fisc-videos` junto a la carpeta del repositorio (hoy `C:Userssgarciaiscisc-videos`). El script nunca borra el origen si la copia no coincide.
+La carpeta es, en este orden: `--destino=RUTA`, la variable `FISC_VIDEOS_DIR`, o `fisc-videos` junto a la carpeta del repositorio (hoy `C:/Users/sgarcia/fisc/fisc-videos`). El script nunca borra el origen si la copia no coincide.
 
 Esto **no reduce el historial**: los 127 MB siguen en los commits viejos y un clon nuevo sigue tardando igual hasta que se limpie con `git filter-repo` (paso 5 de abajo). Sí evita que los videos nuevos o editados engorden más el repositorio y deja el árbol de trabajo liviano.
 
